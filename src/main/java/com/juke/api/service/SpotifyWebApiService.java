@@ -1,11 +1,6 @@
 package com.juke.api.service;
 
 import java.time.Instant;
-import java.util.concurrent.Future;
-
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -18,12 +13,8 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
-import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import se.michaelthelin.spotify.SpotifyApi;
-import se.michaelthelin.spotify.model_objects.credentials.AuthorizationCodeCredentials;
 
 @Service
 public class SpotifyWebApiService {
