@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.view.RedirectView;
 
-import com.juke.api.dto.AccessTokenResponse;
+import com.juke.api.model.AccessTokenResponse;
 import com.juke.api.service.SpotifyAuthService;
 
 import java.io.IOException;

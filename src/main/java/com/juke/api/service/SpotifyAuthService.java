@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.juke.api.dto.AccessTokenResponse;
+import com.juke.api.model.AccessTokenResponse;
 
 @Service
 public class SpotifyAuthService {
@@ -28,8 +28,6 @@ public class SpotifyAuthService {
     private static final String REDIRECT_URI = "http://localhost:8080/spotify/callback";
 	
 	public AccessTokenResponse requestAccessTokenAndRefreshToken(String authorizationCode, String state) throws IOException {
-		
-		//TODO check if it will expires soon and refresh if necessary with refreshAccessToken()
 		
         String tokenEndpoint = "https://accounts.spotify.com/api/token";
         String credentials = CLIENT_ID + ":" + CLIENT_SECRET;
@@ -70,7 +68,9 @@ public class SpotifyAuthService {
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode jsonNode = objectMapper.readTree(responseString);
             accessToken = jsonNode.get("access_token").asText();
-            refreshToken = jsonNode.get("refresh_token").asText();
+            if(jsonNode.get("refresh_token") != null) {
+            	refreshToken = jsonNode.get("refresh_token").asText();
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -78,7 +78,7 @@ public class SpotifyAuthService {
     }
     
     public String buildAuthorizationUrl(String state) throws IOException {
-        String scope = "user-read-playback-state user-modify-playback-state offline_access";
+        String scope = "user-read-playback-state user-modify-playback-state playlist-modify-public playlist-modify-private";
 
         String authEndpoint = "https://accounts.spotify.com/authorize";
         String queryParams = String.format("response_type=code&client_id=%s&scope=%s&redirect_uri=%s&state=%s",
