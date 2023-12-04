@@ -2,8 +2,12 @@ package com.juke.api.model;
 
 import java.math.BigDecimal;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 
-public class AdminConfiguration {
+@Entity
+@Table(name = "AdminConfiguration")
+public class AdminConfiguration extends PersistentObject {
 	
 	private Boolean isAvailable;
 	private BigDecimal trackPrice;

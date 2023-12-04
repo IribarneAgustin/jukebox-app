@@ -19,6 +19,7 @@ public class TrackQueueService {
 	
 	public ResponseEntity<String> enqueueTrack(TrackInfoDTO trackInfoDTO, String paymentGateway) {
 		
+        // check admin config to know if service is enabled
 		paymentContext.setPaymentGateway(paymentGateway);
 		paymentContext.processPayment(0); //get amount from AdminConfiguration
 		queueProducer.sendMessage("tracks",trackInfoDTO.getTrackUri());

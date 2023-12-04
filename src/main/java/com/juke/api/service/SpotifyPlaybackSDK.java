@@ -54,6 +54,7 @@ public class SpotifyPlaybackSDK {
 			System.out.println("Error: " + e.getMessage());
 		}
 	}
+	
 	public void addTracksToPlaylist(String uri, String accessToken) {
 	    try {
 	        List<String> trackUris = new ArrayList<>();
@@ -98,7 +99,8 @@ public class SpotifyPlaybackSDK {
 	        System.out.println("Error: " + e.getMessage());
 	    }
 	}
-    public static void enqueueTrack(String trackUri, String token) {
+	
+    public void enqueueTrack(String trackUri, String token) {
         try {
 			SpotifyApi spotifyApi = new SpotifyApi.Builder().setClientId(SPOTIFY_PLAYBACK_SDK_CLIENT_ID)
 					.setClientSecret(SPOTIFY_PLAYBACK_SDK_CLIENT_SECRET).build();

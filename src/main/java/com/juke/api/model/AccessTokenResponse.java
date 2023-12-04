@@ -1,17 +1,26 @@
 package com.juke.api.model;
 
-import java.security.Timestamp;
+import java.sql.Timestamp;
 
-public class AccessTokenResponse {
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 
+@Entity
+@Table(name = "AccessTokenResponse")
+public class AccessTokenResponse extends PersistentObject{
+
+	@Column(length = 512)
 	private String accessToken;
+	@Column(length = 512)
 	private String refreshToken;
 	private Timestamp expirationTime;
 
-	public AccessTokenResponse(String accessToken, String refreshToken) {
-		this.accessToken = accessToken;
-		this.refreshToken = refreshToken;
-	}
+    public AccessTokenResponse(String accessToken, String refreshToken, Timestamp expirationTime) {
+        this.accessToken = accessToken;
+        this.refreshToken = refreshToken;
+        this.expirationTime = expirationTime;
+    }
 
 	public AccessTokenResponse() {
 	}
