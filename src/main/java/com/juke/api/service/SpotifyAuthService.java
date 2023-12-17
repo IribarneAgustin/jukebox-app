@@ -148,7 +148,7 @@ public class SpotifyAuthService {
     	ResponseEntity<String> response = null;
 		try {
 			tokenResponse = requestAccessTokenAndRefreshToken(code, state);
-	    	accessTokenResponseRepository.save(tokenResponse);
+	    	accessTokenResponseRepository.save(tokenResponse); //TODO encrypt and decrypt
 	    	response = ResponseEntity.status(HttpStatus.OK).body("Access to spotify successfully");
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -165,7 +165,7 @@ public class SpotifyAuthService {
     
 	public String getToken() throws Exception {
 		
-		Optional<AccessTokenResponse> optionalToken = accessTokenResponseRepository.findById(1L); // TO DO improve
+		Optional<AccessTokenResponse> optionalToken = accessTokenResponseRepository.findById(1L); // TODO improve
 		Timestamp currentTimeMillis = new Timestamp(System.currentTimeMillis());
 		String token = null;
 

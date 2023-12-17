@@ -1,5 +1,7 @@
 package com.juke.api.service;
 
+import com.juke.api.dto.PaymentDTO;
+
 public class PaymentContext {
 
 	private IPaymentGateway paymentGateway;
@@ -9,14 +11,37 @@ public class PaymentContext {
 		this.paymentGateway = createPaymentGateway(paymentGatewayName);
 	}
 
-	public void processPayment(double amount) {
+	public void processPayment(PaymentDTO paymentDTO) throws Exception{
 		if (paymentGateway == null) {
 			throw new IllegalStateException("Payment gateway not set.");
 		}
 		System.out.println("Starting payment process...");
-		paymentGateway.process(amount);
+		try {
+			paymentGateway.process(paymentDTO); // handled in the client
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw e;
+		}
 		System.out.println("Payment process completed.");
 	}
+	
+	public String generatePaymentId(PaymentDTO paymentDTO) throws Exception{
+		String redirectUrl = null;
+		if (paymentGateway == null) {
+			throw new IllegalStateException("Payment gateway not set.");
+		}
+		System.out.println("Generating payment id");
+		try {
+			redirectUrl = paymentGateway.generatePaymentId(paymentDTO);
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw e;
+		}
+		System.out.println("Payment id generated succesfully");
+		
+		return redirectUrl;
+	}
+	
 
 	private IPaymentGateway createPaymentGateway(String paymentGatewayName) {
 		switch (paymentGatewayName) {

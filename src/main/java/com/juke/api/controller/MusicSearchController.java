@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.juke.api.service.SpotifyWebApiService;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/spotify")
 public class MusicSearchController {
 	
 	@Autowired

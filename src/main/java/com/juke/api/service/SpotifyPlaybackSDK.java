@@ -24,10 +24,13 @@ public class SpotifyPlaybackSDK {
 
 
     @Value("${SPOTIFY_PLAYBACK_SDK_CLIENT_ID}")
-    private static String SPOTIFY_PLAYBACK_SDK_CLIENT_ID;
+    private String SPOTIFY_PLAYBACK_SDK_CLIENT_ID;
 
     @Value("${SPOTIFY_PLAYBACK_SDK_CLIENT_SECRET}")
-    private static String SPOTIFY_PLAYBACK_SDK_CLIENT_SECRET;
+    private String SPOTIFY_PLAYBACK_SDK_CLIENT_SECRET;
+    
+    @Value("${SPOTIFY_PLAYLIST_ID}")
+    private String SPOTIFY_PLAYLIST_ID;
 
 	public void playSong(String trackUri, String token) {
 		try {
@@ -37,7 +40,7 @@ public class SpotifyPlaybackSDK {
 
 			spotifyApi.setAccessToken(token);
 
-			//TO DO: handle exception advising of open the app
+			//TODO: handle exception advising of open the app
 			Device[] devices = spotifyApi.getUsersAvailableDevices().build().execute();
 			String deviceId = devices[0].getId();
 
@@ -59,10 +62,10 @@ public class SpotifyPlaybackSDK {
 	    try {
 	        List<String> trackUris = new ArrayList<>();
 	        trackUris.add(uri);
-	        String playlistId = "62xLZGP19lvuEewLMYwHV1";
+	        //String playlistId = "62xLZGP19lvuEewLMYwHV1";
 
 	        disableShuffle(accessToken);
-	        String apiUrl = "https://api.spotify.com/v1/playlists/" + playlistId + "/tracks";
+	        String apiUrl = "https://api.spotify.com/v1/playlists/" + SPOTIFY_PLAYLIST_ID + "/tracks";
 
 	        // Prepare the JSON payload using GSON
 	        JsonObject jsonPayload = new JsonObject();
@@ -90,7 +93,7 @@ public class SpotifyPlaybackSDK {
 
 	        // Check the HTTP status code
 	        if (response.statusCode() == 201) {
-	            System.out.println("Tracks added to the playlist!");
+	            System.out.println("Track added to the playlist!");
 	        } else {
 	            System.out.println("Error: " + response.body());
 	        }

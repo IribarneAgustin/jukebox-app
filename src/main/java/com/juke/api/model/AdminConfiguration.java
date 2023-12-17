@@ -2,6 +2,7 @@ package com.juke.api.model;
 
 import java.math.BigDecimal;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
@@ -11,6 +12,8 @@ public class AdminConfiguration extends PersistentObject {
 	
 	private Boolean isAvailable;
 	private BigDecimal trackPrice;
+	@Column(unique = true)
+	private String type;
 	//add from to hours
 	
 	
@@ -39,8 +42,13 @@ public class AdminConfiguration extends PersistentObject {
 		this.trackPrice = trackPrice;
 	}
 	
+	public String getType () {
+		return this.type;
+	}
+	
+	public void setType (String type) {
+		this.type = type;
+	}
 	
 	
-	
-
 }
