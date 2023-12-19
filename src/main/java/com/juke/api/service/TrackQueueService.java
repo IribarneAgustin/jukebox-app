@@ -19,10 +19,7 @@ public class TrackQueueService {
 	
 	
 	private PaymentContext paymentContext = new PaymentContext();
-	
-	@Autowired
-	private TrackQueueMessageProducer queueProducer;
-	
+		
 	@Autowired
 	private AdminConfigurationService adminConfiguration;
 	
@@ -34,6 +31,12 @@ public class TrackQueueService {
 	
 	@Value("${CLIENT_HOME_URL}")
 	private String CLIENT_HOME_URL;
+	
+	@Autowired
+	private SpotifyPlaybackSDK spotifyPlaybackSKDService;
+
+	@Autowired
+	private SpotifyAuthService spotifyAuthService;
 	
 	public ResponseEntity<String> generatePaymentId(TrackInfoDTO trackInfoDTO, String paymentGateway) {
 		
@@ -68,7 +71,7 @@ public class TrackQueueService {
 			AdminConfiguration adminConfig = adminConfiguration.findAdminConfigurationByType(AdminConfigurationConstants.ADMIN_CONFIG_TYPE_PRICES);
 
 			if (adminConfig != null && adminConfig.getIsAvailable()) {
-				queueProducer.sendMessage("tracks", trackURI);
+				spotifyPlaybackSKDService.addTrackToPlaylist(trackURI, spotifyAuthService.getToken());
 			}
 			
 		} catch (Exception e) {

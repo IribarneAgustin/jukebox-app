@@ -5,6 +5,8 @@ import java.sql.Timestamp;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
@@ -13,21 +15,32 @@ public class Transaction extends PersistentObject {
 
 	private Timestamp creationTimestamp;
 	private BigDecimal amount;
-	
+
 	@Column(unique = true)
 	private String paymentId;
-	private String trackUri;
+
+	@ManyToOne
+	@JoinColumn(name = "track_id")
+	private Track track;
 
 	public Transaction() {
 		super();
 	}
 
-	public Transaction(Timestamp creationTimestamp, BigDecimal amount, String paymentId, String trackUri) {
+	public Transaction(Timestamp creationTimestamp, BigDecimal amount, String paymentId, Track track) {
 		super();
 		this.creationTimestamp = creationTimestamp;
 		this.amount = amount;
 		this.paymentId = paymentId;
-		this.trackUri = trackUri;
+		this.track = track;
+	}
+
+	public Track getTrack() {
+		return track;
+	}
+
+	public void setTrack(Track track) {
+		this.track = track;
 	}
 
 	public Timestamp getCreationTimestamp() {
@@ -52,14 +65,6 @@ public class Transaction extends PersistentObject {
 
 	public void setPaymentId(String paymentId) {
 		this.paymentId = paymentId;
-	}
-
-	public String getTrackUri() {
-		return trackUri;
-	}
-
-	public void setTrackUri(String trackUri) {
-		this.trackUri = trackUri;
 	}
 
 }

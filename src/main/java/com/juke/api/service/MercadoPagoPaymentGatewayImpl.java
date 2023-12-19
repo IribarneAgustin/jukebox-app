@@ -31,11 +31,13 @@ public class MercadoPagoPaymentGatewayImpl implements IPaymentGateway {
                         //"currency_id", paymentDTO.getCurrency() Si se omite, toma la config de tu cuenta de MP
                 )
         ));
-        preference.put("back_urls", Map.of(
-                "success", paymentDTO.getSuccessUrl() + "?trackURI=" + paymentDTO.getTrackInfoDTO().getTrackUri() + "&amount=" + paymentDTO.getPrice(),
-                "failure", paymentDTO.getFailedUrl(),
-                "pending", ""
-        ));
+		preference.put("back_urls", Map.of(
+				"success", paymentDTO.getSuccessUrl() + "?trackURI=" + paymentDTO.getTrackInfoDTO().getTrackUri() 
+							+ "&amount="+ paymentDTO.getPrice() + "&albumCover=" + paymentDTO.getTrackInfoDTO().getAlbumCover()
+							+ "&artistName=" + paymentDTO.getTrackInfoDTO().getArtistName() 
+							+ "&trackName=" + paymentDTO.getTrackInfoDTO().getTrackName(),
+				
+				"failure", paymentDTO.getFailedUrl(), "pending", ""));
         preference.put("auto_return", "approved");
 
         RestTemplate restTemplate = new RestTemplate();

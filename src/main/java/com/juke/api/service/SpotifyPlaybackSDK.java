@@ -58,21 +58,15 @@ public class SpotifyPlaybackSDK {
 		}
 	}
 	
-	public void addTracksToPlaylist(String uri, String accessToken) {
+	public void addTrackToPlaylist(String trackUri, String accessToken) {
 	    try {
-	        List<String> trackUris = new ArrayList<>();
-	        trackUris.add(uri);
-	        //String playlistId = "62xLZGP19lvuEewLMYwHV1";
-
-	        disableShuffle(accessToken);
+	        //disableShuffle(accessToken);
 	        String apiUrl = "https://api.spotify.com/v1/playlists/" + SPOTIFY_PLAYLIST_ID + "/tracks";
 
 	        // Prepare the JSON payload using GSON
 	        JsonObject jsonPayload = new JsonObject();
 	        jsonPayload.add("uris", new JsonArray());
-	        for (String trackUri : trackUris) {
-	            jsonPayload.getAsJsonArray("uris").add(new JsonPrimitive(trackUri));
-	        }
+	        jsonPayload.getAsJsonArray("uris").add(new JsonPrimitive(trackUri));
 
 	        // Convert the JSON payload to a string
 	        String jsonPayloadString = new Gson().toJson(jsonPayload);
