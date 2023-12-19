@@ -2,11 +2,9 @@ package com.juke.api.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -41,21 +39,28 @@ public class PaymentController {
 		return trackQueueService.generatePaymentId(trackInfoDTO, "Mercado Pago");
 	}
 
-	//FIXME If i access directly here? 
-	//TODO Save Order before this callback
+	//This method is called by mercado pago redirection when the payment is ok. The params are passed by url in MercadoPagoPaymentGatewayImpl
+	//FIXME If i access directly here? maybe could be saved the order before payment and change status after complete
 	@GetMapping("/success")
-	public RedirectView paymentSuccess(@RequestParam(name = "payment_id") String paymentId, @RequestParam(name = "trackURI") String trackURI, @RequestParam(name = "amount") Double amount) {
+	public RedirectView paymentSuccess(@RequestParam(name = "payment_id") String paymentId,
+			@RequestParam(name = "trackURI") String trackURI, 
+			@RequestParam(name = "amount") Double amount,
+			@RequestParam(name = "albumCover") String albumCover,
+			@RequestParam(name = "artistName") String artistName,
+			@RequestParam(name = "trackName") String trackName){
+		
 		String redirectUrl = CLIENT_SUCCESS_URL;
 		try {
-			transactionService.saveNewTransaction(paymentId, trackURI, amount);
 			trackQueueService.enqueueTrack(trackURI);
+			transactionService.saveNewTransaction(paymentId, trackURI, amount, albumCover, artistName, trackName);
 		} catch (Exception e) {
-			redirectUrl = CLIENT_FAILED_URL + "?messageError=" + 
-		            "El pago se realizó correctamente, pero ocurrió un error al enviar la canción a la cola. Por favor, comuníqueselo al dueño del establecimiento. Número de pago: " + paymentId;
-		    
+			redirectUrl = CLIENT_FAILED_URL + "?messageError="
+					+ "El pago se realizó correctamente, pero ocurrió un error al enviar la canción a la cola. Por favor, comuníqueselo al dueño del establecimiento. Número de pago: "
+					+ paymentId;
+
 			e.printStackTrace();
 		}
-		
+
 		return new RedirectView(redirectUrl);
 	}
 
