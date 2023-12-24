@@ -13,6 +13,7 @@ import java.util.Random;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -34,6 +35,7 @@ public class SpotifyAuthService {
     @Autowired
     private IAccessTokenResponseRepository accessTokenResponseRepository;
 
+    //FIXME
     private static final String REDIRECT_URI = "http://localhost:8080/spotify/callback";
 	
 	private AccessTokenResponse requestAccessTokenAndRefreshToken(String authorizationCode, String state) throws IOException {
@@ -149,7 +151,7 @@ public class SpotifyAuthService {
 		try {
 			tokenResponse = requestAccessTokenAndRefreshToken(code, state);
 	    	accessTokenResponseRepository.save(tokenResponse); //TODO encrypt and decrypt
-	    	response = ResponseEntity.status(HttpStatus.OK).body("Access to spotify successfully");
+	    	response = ResponseEntity.status(HttpStatus.OK).header(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*").body("Access to spotify successfully");
 		} catch (Exception e) {
 			e.printStackTrace();
 			response = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to request access token");
