@@ -1,10 +1,14 @@
 package com.juke.api.service;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.FormHttpMessageConverter;
@@ -74,29 +78,47 @@ public class SpotifyWebApiService {
 	}
 
 	public ResponseEntity<String> getArtistInformationByName(String artistName) {
-		RestTemplate restTemplate = new RestTemplate();
-		HttpHeaders headers = new HttpHeaders();
+	    RestTemplate restTemplate = new RestTemplate();
+	    HttpHeaders headers = new HttpHeaders();
 
-		headers.set("Authorization", "Bearer " + getOrRefreshAccessToken());
-		HttpEntity<String> entity = new HttpEntity<>(headers);
-		String url = "https://api.spotify.com/v1/search?q=" + artistName + "&type=artist";
+	    headers.set("Authorization", "Bearer " + getOrRefreshAccessToken());
+	    HttpEntity<String> entity = new HttpEntity<>(headers);
+	    
+	    String url = "https://api.spotify.com/v1/search?q=" + artistName + "&type=artist&sort=popularity";
 
-		ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+	    ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
 
-		return response;
+	    return response;
 	}
+
 	
 	public ResponseEntity<String> getTrackInformationByName(String trackName) {
 		RestTemplate restTemplate = new RestTemplate();
 		HttpHeaders headers = new HttpHeaders();
+		ResponseEntity<String> response = null;
 
-		headers.set("Authorization", "Bearer " + getOrRefreshAccessToken());
-		HttpEntity<String> entity = new HttpEntity<>(headers);
-		String url = "https://api.spotify.com/v1/search?q=" + trackName + "&type=track";
+		try {
+			headers.set("Authorization", "Bearer " + getOrRefreshAccessToken());
+			HttpEntity<String> entity = new HttpEntity<>(headers);
 
-		ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+			 String encodedTrackName = URLEncoder.encode(trackName, StandardCharsets.UTF_8.toString());
+	         String url = "https://api.spotify.com/v1/search?q=" + encodedTrackName + "&type=track";
 
+			response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+			//TODO
+		/*	if(response != null && response.getStatusCode().equals(HttpStatus.OK)) {
+				String jsonResponse = response.getBody();
+				filterRelevantTracks(jsonResponse);
+			}*/
+		} catch (Exception e) {
+			e.printStackTrace();
+			response = new ResponseEntity<String>(HttpStatus.INTERNAL_SERVER_ERROR);
+		}
 		return response;
 	}
+	
+	/*private String filterRelevantTracks(String json) {
+						
+	}*/
 
 }

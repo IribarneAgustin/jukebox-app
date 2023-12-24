@@ -30,7 +30,8 @@ public class MusicSearchController {
 	
 	@GetMapping("/track/{name}")
 	public ResponseEntity<String> getTrackInformationByName(@PathVariable(name = "name") String artistName) {
-	    return spotifyWebApiService.getTrackInformationByName(artistName);
+		return spotifyWebApiService.getTrackInformationByName(artistName);
+
 	}
 	
 	@GetMapping("/track/getQueue")
