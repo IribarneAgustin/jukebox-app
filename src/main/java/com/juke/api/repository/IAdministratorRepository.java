@@ -9,5 +9,7 @@ import com.juke.api.model.Administrator;
 public interface IAdministratorRepository extends JpaRepository<Administrator, Long>{
 	
 	public Administrator findByUsername(String username);
+	
+	public Administrator findByActiveTrue();
 
 }

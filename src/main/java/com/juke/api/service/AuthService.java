@@ -27,19 +27,25 @@ public class AuthService {
 
 	@Autowired
 	private JwtService jwtService;
-	
+
 	@Autowired
 	private PasswordEncoder passwordEncoder;
 
 	public AuthResponse login(LoginRequest request) throws Exception {
-		authManager.authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
-		UserDetails user = adminRepository.findByUsername(request.getUsername());
-
-		if (user == null) {
-			throw new Exception("User does not exists");
-		}
 		AuthResponse response = new AuthResponse();
-		response.setToken(jwtService.getToken(user));
+		try {
+			UserDetails user = adminRepository.findByUsername(request.getUsername());
+			
+			if (user == null) {
+				throw new Exception("Bad credentials");
+			}
+			
+			authManager.authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
+			response.setToken(jwtService.getToken(user));
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw e;
+		}
 		return response;
 	}
 
@@ -47,14 +53,18 @@ public class AuthService {
 	public AuthResponse register(RegisterRequest request) throws Exception {
 		AuthResponse authResponse = new AuthResponse();
 		try {
-			Administrator admin = new Administrator();
-			admin.setActive(Boolean.TRUE);
-			admin.setPassword(passwordEncoder.encode(request.getPassword()));
-			admin.setUsername(request.getUsername());
+			if (adminRepository.findByActiveTrue() == null) {
+				Administrator admin = new Administrator();
+				admin.setActive(Boolean.TRUE);
+				admin.setPassword(passwordEncoder.encode(request.getPassword()));
+				admin.setUsername(request.getUsername());
 
-			adminRepository.save(admin);
+				adminRepository.save(admin);
 
-			authResponse.setToken(jwtService.getToken(admin));
+				authResponse.setToken(jwtService.getToken(admin));
+			} else {
+				throw new Exception("Admin already exists");
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw e;

@@ -4,15 +4,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.view.RedirectView;
 
 import com.juke.api.service.SpotifyAuthService;
-
-import jakarta.servlet.http.HttpServletResponse;
 
 @RestController
 @RequestMapping("/spotify")
@@ -25,24 +22,17 @@ public class SpotifyAuthController {
 
 
     /*This method will redirect the user to spotify login if necessary */
+    //Dispatched by the client redirection after login successfully completed
     @GetMapping("/login")
     public RedirectView login() throws Exception {
         String state = spotifyAuthService.generateRandomString(16);
         String authorizationUrl = spotifyAuthService.buildAuthorizationUrl(state);
         return new RedirectView(authorizationUrl);
     }
-    
-   /* @GetMapping("/login")
-    public void login(HttpServletResponse response) throws Exception {
-        String state = spotifyAuthService.generateRandomString(16);
-        String authorizationUrl = spotifyAuthService.buildAuthorizationUrl(state);
-        response.sendRedirect(authorizationUrl);
-    }*/
 
     @GetMapping("/callback")
-    public ResponseEntity<String> callback(@RequestParam("code") String code, @RequestParam("state") String state) throws Exception {
-    	//if code != error. Redirect to admin panel URL of client side
-    	ResponseEntity<String> response = spotifyAuthService.saveAccesTokenAndRefreshToken(code, state);
+    public RedirectView callback(@RequestParam("code") String code, @RequestParam("state") String state) throws Exception {
+    	RedirectView response = spotifyAuthService.saveAccesTokenAndRefreshToken(code, state);
         return response;
     }
 

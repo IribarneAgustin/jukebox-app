@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 import com.juke.api.model.AdminConfiguration;
 import com.juke.api.repository.IAdminConfigurationRepository;
-import com.juke.utils.AdminConfigurationConstants;
+import com.juke.api.utils.AdminConfigurationConstants;
 
 @Service
 public class AdminConfigurationService {

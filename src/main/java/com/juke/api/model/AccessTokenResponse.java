@@ -15,11 +15,15 @@ public class AccessTokenResponse extends PersistentObject{
 	@Column(length = 512)
 	private String refreshToken;
 	private Timestamp expirationTime;
+	@Column(unique = true)
+	private String serviceId; //Constants
 
-    public AccessTokenResponse(String accessToken, String refreshToken, Timestamp expirationTime) {
+    public AccessTokenResponse(String accessToken, String refreshToken, Timestamp expirationTime, String serviceId) {
         this.accessToken = accessToken;
         this.refreshToken = refreshToken;
         this.expirationTime = expirationTime;
+        this.serviceId = serviceId;
+        super.setActive(Boolean.TRUE);
     }
 
 	public AccessTokenResponse() {
@@ -50,4 +54,14 @@ public class AccessTokenResponse extends PersistentObject{
 	public String getRefreshToken() {
 		return refreshToken;
 	}
+
+	public String getServiceId() {
+		return serviceId;
+	}
+
+	public void setServiceId(String serviceId) {
+		this.serviceId = serviceId;
+	}
+	
+	
 }
