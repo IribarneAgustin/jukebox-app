@@ -16,7 +16,7 @@ import com.juke.api.dto.TrackInfoDTO;
 import com.juke.api.model.Track;
 import com.juke.api.model.Transaction;
 import com.juke.api.repository.ITransactionRepository;
-import com.juke.utils.SpotifyUtils;
+import com.juke.api.utils.SpotifyUtils;
 
 @Service
 public class TransactionService {

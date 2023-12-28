@@ -10,11 +10,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.juke.api.service.SpotifyWebApiService;
-import com.juke.api.service.TrackService;
 import com.juke.api.service.TransactionService;
 import com.juke.api.dto.TrackInfoDTO;
 @RestController
-@RequestMapping("/api/spotify")
+@RequestMapping("/spotify")
 public class MusicSearchController {
 	
 	@Autowired
@@ -34,7 +33,7 @@ public class MusicSearchController {
 
 	}
 	
-	@GetMapping("/track/getQueue")
+	@GetMapping("/track/list/queue")
 	public List<TrackInfoDTO> getTrackQueue () {
 		return transactionService.getTrackQueue();
 		

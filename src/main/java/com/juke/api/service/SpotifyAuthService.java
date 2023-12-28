@@ -17,11 +17,13 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.view.RedirectView;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.juke.api.model.AccessTokenResponse;
 import com.juke.api.repository.IAccessTokenResponseRepository;
+import com.juke.api.utils.AdminConfigurationConstants;
 
 @Service
 public class SpotifyAuthService {
@@ -37,6 +39,9 @@ public class SpotifyAuthService {
 
     //FIXME
     private static final String REDIRECT_URI = "http://localhost:8080/spotify/callback";
+    
+    private static final String CLIENT_URL_ADMIN_PANEL = "http://localhost:5173/admin/dashboard";
+    private static final String CLIENT_URL_LOGIN_ERROR = "http://localhost:5173/admin/login?error=No se pudo conectar con Spotify";
 	
 	private AccessTokenResponse requestAccessTokenAndRefreshToken(String authorizationCode, String state) throws IOException {
 		
@@ -89,7 +94,7 @@ public class SpotifyAuthService {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return new AccessTokenResponse(accessToken, refreshToken, expirationTime);
+        return new AccessTokenResponse(accessToken, refreshToken, expirationTime, AdminConfigurationConstants.ACCESS_TOKEN_RESPONSE_SERVICE_ID_SPOTIFY_SDK);
     }
     
     public String buildAuthorizationUrl(String state) throws IOException {
@@ -145,16 +150,28 @@ public class SpotifyAuthService {
         }
     }
     
-    public ResponseEntity<String> saveAccesTokenAndRefreshToken(String code, String state) {
-    	AccessTokenResponse tokenResponse;
-    	ResponseEntity<String> response = null;
+    //We always save one row by AccessTokenResponse serviceId
+    public RedirectView saveAccesTokenAndRefreshToken(String code, String state) {
+    	AccessTokenResponse newTokenResponse;
+    	Optional<AccessTokenResponse> storedTokenOptional;
+    	RedirectView response = null;
 		try {
-			tokenResponse = requestAccessTokenAndRefreshToken(code, state);
-	    	accessTokenResponseRepository.save(tokenResponse); //TODO encrypt and decrypt
-	    	response = ResponseEntity.status(HttpStatus.OK).header(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*").body("Access to spotify successfully");
+			newTokenResponse = requestAccessTokenAndRefreshToken(code, state);
+			storedTokenOptional = accessTokenResponseRepository.findByServiceId(AdminConfigurationConstants.ACCESS_TOKEN_RESPONSE_SERVICE_ID_SPOTIFY_SDK);
+			if (storedTokenOptional.isPresent()){
+				//Update values
+				AccessTokenResponse storedToken = storedTokenOptional.get();
+				storedToken.setAccessToken(newTokenResponse.getAccessToken());
+				storedToken.setRefreshToken(newTokenResponse.getRefreshToken());
+				storedToken.setExpirationTime(newTokenResponse.getExpirationTime());
+				accessTokenResponseRepository.save(newTokenResponse);
+			} else {
+		    	accessTokenResponseRepository.save(newTokenResponse); //TODO encrypt and decrypt
+			}
+	    	response = new RedirectView(CLIENT_URL_ADMIN_PANEL);
 		} catch (Exception e) {
 			e.printStackTrace();
-			response = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to request access token");
+			response = new RedirectView(CLIENT_URL_LOGIN_ERROR);
 		}
 		return response;   	 
     }
@@ -166,8 +183,8 @@ public class SpotifyAuthService {
     }
     
 	public String getToken() throws Exception {
-		
-		Optional<AccessTokenResponse> optionalToken = accessTokenResponseRepository.findById(1L); // TODO improve
+		//This method works when the admin was logged succesfully and generated the first row with valid and refresh token. After that, it will refresh if necessary
+		Optional<AccessTokenResponse> optionalToken = accessTokenResponseRepository.findByServiceId(AdminConfigurationConstants.ACCESS_TOKEN_RESPONSE_SERVICE_ID_SPOTIFY_SDK); // TODO improve
 		Timestamp currentTimeMillis = new Timestamp(System.currentTimeMillis());
 		String token = null;
 
@@ -180,6 +197,8 @@ public class SpotifyAuthService {
 			    	accessTokenResponseRepository.save(storedToken);
 				} 
 				token = storedToken.getAccessToken();
+			} else {
+				throw new Exception("No se pudo obtener el token de Spotify");
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

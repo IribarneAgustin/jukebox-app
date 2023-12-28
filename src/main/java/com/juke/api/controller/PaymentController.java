@@ -1,5 +1,8 @@
 package com.juke.api.controller;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +20,7 @@ import com.juke.api.service.TrackQueueService;
 import com.juke.api.service.TransactionService;
 
 @RestController
-@RequestMapping("/api/payment")
+@RequestMapping("payment")
 @CrossOrigin(origins = { "http://localhost:3000", "http://localhost:8080", "http://localhost:5173", "*" })
 public class PaymentController {
 
@@ -47,16 +50,15 @@ public class PaymentController {
 			@RequestParam(name = "amount") Double amount,
 			@RequestParam(name = "albumCover") String albumCover,
 			@RequestParam(name = "artistName") String artistName,
-			@RequestParam(name = "trackName") String trackName){
+			@RequestParam(name = "trackName") String trackName) throws UnsupportedEncodingException{
 		
 		String redirectUrl = CLIENT_SUCCESS_URL;
 		try {
 			trackQueueService.enqueueTrack(trackURI);
 			transactionService.saveNewTransaction(paymentId, trackURI, amount, albumCover, artistName, trackName);
 		} catch (Exception e) {
-			redirectUrl = CLIENT_FAILED_URL + "?messageError="
-					+ "El pago se realizó correctamente, pero ocurrió un error al enviar la canción a la cola. Por favor, comuníqueselo al dueño del establecimiento. Número de pago: "
-					+ paymentId;
+			 String encodedErrorMessage = URLEncoder.encode("El pago se realizó correctamente, pero ocurrió un error al enviar la canción a la cola. Por favor, comuníqueselo al dueño del establecimiento. Número de pago: " + paymentId, "UTF-8");
+	         redirectUrl = CLIENT_FAILED_URL + "?message=" + encodedErrorMessage;
 
 			e.printStackTrace();
 		}

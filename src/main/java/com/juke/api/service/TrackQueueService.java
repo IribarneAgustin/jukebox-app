@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 import com.juke.api.dto.PaymentDTO;
 import com.juke.api.dto.TrackInfoDTO;
 import com.juke.api.model.AdminConfiguration;
-import com.juke.utils.AdminConfigurationConstants;
+import com.juke.api.utils.AdminConfigurationConstants;
 
 @Service
 public class TrackQueueService {

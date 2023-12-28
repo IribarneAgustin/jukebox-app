@@ -23,7 +23,11 @@ public class SecurityConfig {
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		return http.csrf(csrf -> csrf.disable())
 				.authorizeHttpRequests(
-						authRequest -> authRequest.requestMatchers("/auth/**").permitAll().anyRequest().authenticated())
+						authRequest -> authRequest
+						.requestMatchers("/admin/**").permitAll()
+						.requestMatchers("/spotify/**").permitAll()
+						.requestMatchers("/payment/**").permitAll()
+						.anyRequest().authenticated())
 	            .sessionManagement(sessionManager -> sessionManager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 	            .authenticationProvider(authProvider)
 	            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
