@@ -29,18 +29,22 @@ public class AuthController {
 	    try {
 	        AuthResponse authResponse = authService.login(request);
 	        String jwtToken = authResponse.getToken();
-	        
-	        Cookie cookie = new Cookie("jwtToken", jwtToken);
-	        response.addCookie(cookie);
-	        cookie.setSecure(true);  // If served over HTTPS
-	        cookie.setHttpOnly(true);
-	        response.addCookie(cookie);
-	        
+
+	        // Set the cookie with SameSite attribute as "None" for cross-origin requests
+	        String cookieHeader = String.format("jwtToken=%s; SameSite=None; Secure; HttpOnly; Max-Age=%d; Path=/", jwtToken, 60 * 60);
+
+	        response.setHeader("Access-Control-Allow-Credentials", "true");
+	        response.setHeader("Access-Control-Allow-Origin", "http://localhost:5173");
+
+	        response.setHeader("Set-Cookie", cookieHeader);
+
 	        return ResponseEntity.ok(authResponse);
 	    } catch (Exception e) {
 	        return ("Bad credentials").equals(e.getMessage()) ? ResponseEntity.status(HttpStatus.UNAUTHORIZED).build() : ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
 	    }
 	}
+
+
 
 	@PostMapping("/register")
 	public ResponseEntity<AuthResponse> register(@RequestBody RegisterRequest request) {

@@ -1,14 +1,9 @@
 package com.juke.api.service;
 
-import java.util.ArrayList;
-import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import com.juke.api.dto.TrackInfoDTO;
 import com.juke.api.model.Track;
-import com.juke.api.model.Transaction;
 import com.juke.api.repository.ITrackRepository;
 
 @Service

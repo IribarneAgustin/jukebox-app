@@ -164,7 +164,7 @@ public class SpotifyAuthService {
 				storedToken.setAccessToken(newTokenResponse.getAccessToken());
 				storedToken.setRefreshToken(newTokenResponse.getRefreshToken());
 				storedToken.setExpirationTime(newTokenResponse.getExpirationTime());
-				accessTokenResponseRepository.save(newTokenResponse);
+				accessTokenResponseRepository.save(storedToken);
 			} else {
 		    	accessTokenResponseRepository.save(newTokenResponse); //TODO encrypt and decrypt
 			}

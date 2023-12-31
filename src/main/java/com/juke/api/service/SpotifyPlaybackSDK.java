@@ -4,8 +4,6 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.Future;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -58,10 +56,10 @@ public class SpotifyPlaybackSDK {
 		}
 	}
 	
-	public void addTrackToPlaylist(String trackUri, String accessToken) {
+	public void addTrackToPlaylist(String trackUri, String accessToken, String spotifyPlaylistID) {
 	    try {
 	        //disableShuffle(accessToken);
-	        String apiUrl = "https://api.spotify.com/v1/playlists/" + SPOTIFY_PLAYLIST_ID + "/tracks";
+	        String apiUrl = "https://api.spotify.com/v1/playlists/" + spotifyPlaylistID + "/tracks";
 
 	        // Prepare the JSON payload using GSON
 	        JsonObject jsonPayload = new JsonObject();
