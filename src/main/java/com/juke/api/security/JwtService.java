@@ -1,9 +1,7 @@
 package com.juke.api.security;
 
-import java.security.Key;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
-import java.security.PrivateKey;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -21,25 +19,30 @@ public class JwtService {
 	private static KeyPair keyPair = generateKeyPair();
 
 	public String getToken(UserDetails user) {
-		Map<String, Object> claims = new HashMap<>();
+	    Map<String, Object> claims = new HashMap<>();
 
-		String token = Jwts.builder().setClaims(claims).setSubject(user.getUsername())
-				.setIssuedAt(new Date(System.currentTimeMillis()))
-				.setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 + 24))
-				.signWith(keyPair.getPrivate(), SignatureAlgorithm.ES256).compact();
+	    String token = Jwts.builder()
+	            .setClaims(claims)
+	            .setSubject(user.getUsername())
+	            .setIssuedAt(new Date(System.currentTimeMillis()))
+	            .setExpiration(new Date(System.currentTimeMillis() + 24 * 60 * 60 * 1000)) // 24 hours
+	            .signWith(keyPair.getPrivate(), SignatureAlgorithm.ES256)
+	            .compact();
 
-		return token;
+	    return token;
 	}
+
 	 
-	 private static KeyPair generateKeyPair() {
-	        try {
-	            KeyPairGenerator generator = KeyPairGenerator.getInstance("EC");
-	            generator.initialize(256);
-	            return generator.generateKeyPair();
-	        } catch (Exception e) {
-	            throw new RuntimeException("Error generating ECDSA key pair", e);
-	        }
+	private static KeyPair generateKeyPair() {
+	    try {
+	        KeyPairGenerator generator = KeyPairGenerator.getInstance("EC");
+	        generator.initialize(256);
+	        return generator.generateKeyPair();
+	    } catch (Exception e) {
+	        throw new RuntimeException("Error generating ECDSA key pair", e);
 	    }
+	}
+
 
     public String getUsernameFromToken(String token) {
         return getClaim(token, Claims::getSubject);
@@ -50,13 +53,19 @@ public class JwtService {
 		return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
 	}
 
-    private Claims getAllClaims(String token) {
-        try {
-            return Jwts.parserBuilder().setSigningKey(keyPair.getPublic()).build().parseClaimsJws(token).getBody();
-        } catch (Exception e) {
-            throw new RuntimeException("Error parsing JWT claims", e);
-        }
-    }
+	private Claims getAllClaims(String token) {
+	    try {
+	        // Specify the algorithm when building the parser
+	        return Jwts.parserBuilder()
+	            .setSigningKey(keyPair.getPublic())
+	            .build()
+	            .parseClaimsJws(token)
+	            .getBody();
+	    } catch (Exception e) {
+	        throw new RuntimeException("Error parsing JWT claims", e);
+	    }
+	}
+
 
 	public <T> T getClaim(String token, Function<Claims, T> claimsResolver) {
 		final Claims claims = getAllClaims(token);

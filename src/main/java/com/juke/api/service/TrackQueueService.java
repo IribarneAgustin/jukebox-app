@@ -4,15 +4,14 @@ import java.math.BigDecimal;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.juke.api.dto.PaymentDTO;
 import com.juke.api.dto.TrackInfoDTO;
-import com.juke.api.model.AdminConfiguration;
-import com.juke.api.utils.AdminConfigurationConstants;
+import com.juke.api.model.AppConfiguration;
+import com.juke.api.model.TrackPriceConfiguration;
 
 @Service
 public class TrackQueueService {
@@ -44,12 +43,12 @@ public class TrackQueueService {
 		String paymentId = null;
 		try {
 
-			AdminConfiguration adminConfig = adminConfiguration.findAdminConfigurationByType(AdminConfigurationConstants.ADMIN_CONFIG_TYPE_PRICES);
+			AppConfiguration appConfig = adminConfiguration.findAppConfigurationByActiveTrue();
 
-			if (adminConfig != null && adminConfig.getIsAvailable()) { //handle it with interceptors?
-
+			if (appConfig != null && appConfig.getIsAvailable()) { //handle it with interceptors?
+				TrackPriceConfiguration priceConfig = adminConfiguration.findTrackPriceConfigurationByActiveTrue();
 				paymentContext.setPaymentGateway(paymentGateway);
-				paymentId = paymentContext.generatePaymentId(createPaymentDTO(adminConfig.getTrackPrice(), trackInfoDTO));
+				paymentId = paymentContext.generatePaymentId(createPaymentDTO(priceConfig.getTrackPrice(), trackInfoDTO));
 				if (paymentId != null) {
 				     response = new ResponseEntity<>(paymentId, HttpStatus.CREATED);
 				} else {
@@ -68,12 +67,14 @@ public class TrackQueueService {
 	
 	public void enqueueTrack(String trackURI) throws Exception {
 		try {
-			AdminConfiguration adminConfig = adminConfiguration.findAdminConfigurationByType(AdminConfigurationConstants.ADMIN_CONFIG_TYPE_PRICES);
+			AppConfiguration adminConfig = adminConfiguration.findAppConfigurationByActiveTrue();
 
-			if (adminConfig != null && adminConfig.getIsAvailable()) {
-				spotifyPlaybackSKDService.addTrackToPlaylist(trackURI, spotifyAuthService.getToken());
+			if (adminConfig != null && adminConfig.getSpotifyPlaylistId() != null) {
+				spotifyPlaybackSKDService.addTrackToPlaylist(trackURI, spotifyAuthService.getToken(), adminConfig.getSpotifyPlaylistId());
+			} else {
+				throw new Exception("Cannot get spotify playlist Id");
 			}
-			
+
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw e;
