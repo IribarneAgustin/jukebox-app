@@ -1,6 +1,6 @@
 package com.juke.api.model;
 
-import java.sql.Timestamp;
+import java.time.LocalTime;
 
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
@@ -10,15 +10,16 @@ import jakarta.persistence.Entity;
 public class AppConfiguration extends AdminConfiguration {
 
 	private String spotifyPlaylistId;
-	private Timestamp fromHour;
-	private Timestamp toHour;
+	private LocalTime fromHour;
+	private LocalTime toHour;
 	private Boolean isAvailable;
+	//payment gateway?
 
 	public AppConfiguration() {
 		super();
 	}
 
-	public AppConfiguration(String spotifyPlaylistId, Timestamp fromHour, Timestamp toHour, Boolean isAvailable) {
+	public AppConfiguration(String spotifyPlaylistId, LocalTime fromHour, LocalTime toHour, Boolean isAvailable) {
 		super();
 		this.spotifyPlaylistId = spotifyPlaylistId;
 		this.fromHour = fromHour;
@@ -34,19 +35,19 @@ public class AppConfiguration extends AdminConfiguration {
 		this.spotifyPlaylistId = spotifyPlaylistId;
 	}
 
-	public Timestamp getFromHour() {
+	public LocalTime getFromHour() {
 		return fromHour;
 	}
 
-	public void setFromHour(Timestamp fromHour) {
+	public void setFromHour(LocalTime fromHour) {
 		this.fromHour = fromHour;
 	}
 
-	public Timestamp getToHour() {
+	public LocalTime getToHour() {
 		return toHour;
 	}
 
-	public void setToHour(Timestamp toHour) {
+	public void setToHour(LocalTime toHour) {
 		this.toHour = toHour;
 	}
 

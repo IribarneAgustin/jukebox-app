@@ -35,7 +35,6 @@ public class AuthController {
 
 	        response.setHeader("Access-Control-Allow-Credentials", "true");
 	        response.setHeader("Access-Control-Allow-Origin", "http://localhost:5173");
-
 	        response.setHeader("Set-Cookie", cookieHeader);
 
 	        return ResponseEntity.ok(authResponse);
@@ -61,12 +60,12 @@ public class AuthController {
 	@PostMapping("/logout")
     public ResponseEntity<String> logout(HttpServletResponse response, @CookieValue(name = "jwtToken") String jwtToken) {
         try {
+            
+	        String cookieHeader = String.format("jwtToken=%s; SameSite=None; Secure; HttpOnly; Max-Age=%d; Path=/", "", 60 * 60);
 
-            Cookie cookie = new Cookie("jwtToken", null);
-            cookie.setMaxAge(0);
-            cookie.setSecure(true);  // If served over HTTPS
-            cookie.setHttpOnly(true);
-            response.addCookie(cookie);
+	        response.setHeader("Access-Control-Allow-Credentials", "true");
+	        response.setHeader("Access-Control-Allow-Origin", "http://localhost:5173");
+	        response.setHeader("Set-Cookie", cookieHeader);
 
             return ResponseEntity.ok("Logged out successfully");
         } catch (Exception e) {

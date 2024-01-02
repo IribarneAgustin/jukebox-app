@@ -13,4 +13,7 @@ public interface ITransactionRepository extends JpaRepository<Transaction, Long>
 	
 	public List<Transaction> findLastTenByOrderByCreationTimestampDesc();
 
+	public List<Transaction> findAllByActiveTrueOrderByCreationTimestampDesc();
+
+
 }
