@@ -26,9 +26,6 @@ public class SpotifyPlaybackSDK {
 
     @Value("${SPOTIFY_PLAYBACK_SDK_CLIENT_SECRET}")
     private String SPOTIFY_PLAYBACK_SDK_CLIENT_SECRET;
-    
-    @Value("${SPOTIFY_PLAYLIST_ID}")
-    private String SPOTIFY_PLAYLIST_ID;
 
 	public void playSong(String trackUri, String token) {
 		try {
@@ -90,7 +87,7 @@ public class SpotifyPlaybackSDK {
 	            System.out.println("Error: " + response.body());
 	            //Here the paymant was executed correctly
 	            //we dont throw an exception with the aim to save the transaction anyway, so the admin will be aware of the payment previously made. 
-	            //The user will be notified with payment id, so it could check and add manually the song to the playlist
+	            //The user will be notified with payment id, so he can check and add manually the song to the playlist
 	        	//throw new Exception("Ocurrió un error al enviar la canción a la cola");
 	        }
 

@@ -4,12 +4,8 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.juke.api.dto.TrackInfoDTO;
@@ -78,6 +74,10 @@ public class TransactionService {
 
 		return trackInfoList;
 
+	}
+	
+	public List<Transaction> findAllByActiveTrueOrderByCreationTimestampDesc() {
+		return transactionRepository.findAllByActiveTrueOrderByCreationTimestampDesc();
 	}
 	
 
