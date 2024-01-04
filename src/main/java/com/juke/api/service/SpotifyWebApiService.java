@@ -3,6 +3,8 @@ package com.juke.api.service;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.Locale;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -92,32 +94,28 @@ public class SpotifyWebApiService {
 
 	
 	public ResponseEntity<String> getTrackInformationByName(String trackName) {
-		RestTemplate restTemplate = new RestTemplate();
-		HttpHeaders headers = new HttpHeaders();
-		ResponseEntity<String> response = null;
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+        ResponseEntity<String> response = null;
 
-		try {
-			headers.set("Authorization", "Bearer " + getOrRefreshAccessToken());
-			HttpEntity<String> entity = new HttpEntity<>(headers);
+        try {
+            headers.set("Authorization", "Bearer " + getOrRefreshAccessToken());
+            HttpEntity<String> entity = new HttpEntity<>(headers);
 
-			 String encodedTrackName = URLEncoder.encode(trackName, StandardCharsets.UTF_8.toString());
-	         String url = "https://api.spotify.com/v1/search?q=" + encodedTrackName + "&type=track";
+            String encodedTrackName = URLEncoder.encode(trackName, StandardCharsets.UTF_8.toString());
 
-			response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
-			//TODO
-		/*	if(response != null && response.getStatusCode().equals(HttpStatus.OK)) {
-				String jsonResponse = response.getBody();
-				filterRelevantTracks(jsonResponse);
-			}*/
-		} catch (Exception e) {
-			e.printStackTrace();
-			response = new ResponseEntity<String>(HttpStatus.INTERNAL_SERVER_ERROR);
-		}
-		return response;
-	}
+            String countryCode = "AR";//Locale.getDefault().getCountry();
+
+            String url = "https://api.spotify.com/v1/search?q=" + encodedTrackName + "&type=track&market=" + countryCode ;
+
+            response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            response = new ResponseEntity<String>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return response;
+    }
 	
-	/*private String filterRelevantTracks(String json) {
-						
-	}*/
 
 }

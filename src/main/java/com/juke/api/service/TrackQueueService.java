@@ -1,6 +1,7 @@
 package com.juke.api.service;
 
 import java.math.BigDecimal;
+import java.time.LocalTime;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -45,7 +46,7 @@ public class TrackQueueService {
 
 			AppConfiguration appConfig = adminConfiguration.findAppConfigurationByActiveTrue();
 
-			if (appConfig != null && appConfig.getIsAvailable()) { //handle it with interceptors?
+			if (appConfig != null && appConfig.getIsAvailable() && isAvailableTime(appConfig.getFromHour(), appConfig.getToHour())) { //handle it with interceptors?
 				TrackPriceConfiguration priceConfig = adminConfiguration.findTrackPriceConfigurationByActiveTrue();
 				paymentContext.setPaymentGateway(paymentGateway);
 				paymentId = paymentContext.generatePaymentId(createPaymentDTO(priceConfig.getTrackPrice(), trackInfoDTO));
@@ -55,6 +56,8 @@ public class TrackQueueService {
 					response = new ResponseEntity<String>(HttpStatus.BAD_GATEWAY);
 				}
 
+			} else {
+				response = ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body("La aplicación está desactivada o fuera del horario de actividad");
 			}
 		} catch (Exception e) {
 			response = new ResponseEntity<String>(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -65,6 +68,7 @@ public class TrackQueueService {
 		
 	}
 	
+
 	public void enqueueTrack(String trackURI) throws Exception {
 		try {
 			AppConfiguration adminConfig = adminConfiguration.findAppConfigurationByActiveTrue();
@@ -95,5 +99,18 @@ public class TrackQueueService {
 		paymentDTO.setFailedUrl(CLIENT_HOME_URL);
 		return paymentDTO;
 	}
+	
+	private boolean isAvailableTime(LocalTime fromHour, LocalTime toHour) {
+	    LocalTime currentTime = LocalTime.now();
+
+	    if (fromHour.isAfter(toHour)) {
+	        // Range crosses midnight
+	        return !currentTime.isBefore(fromHour) || !currentTime.isAfter(toHour);
+	    } else {
+	        // Normal range without crossing midnight
+	        return !currentTime.isBefore(fromHour) && !currentTime.isAfter(toHour);
+	    }
+	}
+
 
 }
