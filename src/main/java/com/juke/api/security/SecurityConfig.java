@@ -24,7 +24,7 @@ public class SecurityConfig {
 		return http.csrf(csrf -> csrf.disable())
 				.authorizeHttpRequests(
 						authRequest -> authRequest
-						.requestMatchers("/admin/**").permitAll()
+						.requestMatchers("/admin/login").permitAll()
 						.requestMatchers("/spotify/**").permitAll()
 						.requestMatchers("/payment/**").permitAll()
 						.anyRequest().authenticated())
