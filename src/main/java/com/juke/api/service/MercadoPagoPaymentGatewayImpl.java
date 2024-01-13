@@ -1,8 +1,11 @@
 package com.juke.api.service;
 
+import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -14,46 +17,57 @@ public class MercadoPagoPaymentGatewayImpl implements IPaymentGateway {
 
 	@Override
 	public void process(PaymentDTO paymentDTO) throws Exception {
-		//handled in the client		
+		// handled in the client
 	}
 
 	@Override
-	public String generatePaymentId(PaymentDTO paymentDTO) throws Exception {//add try catch
-		
-		Map<String, Object> preference = new HashMap<>();
-				
-        preference.put("items", List.of(
-                Map.of(
-                        "title", paymentDTO.getDescription(),
-                        "unit_price", Double.parseDouble(paymentDTO.getPrice().toString()),
-                        "quantity", paymentDTO.getQuantity()//,
-                        //"currency_id", paymentDTO.getCurrency() Si se omite, toma la config de tu cuenta de MP
-                )
-        ));
-		preference.put("back_urls", Map.of(
-				"success", paymentDTO.getSuccessUrl() + "?trackURI=" + paymentDTO.getTrackInfoDTO().getTrackUri() 
-							+ "&amount="+ paymentDTO.getPrice() + "&albumCover=" + paymentDTO.getTrackInfoDTO().getAlbumCover()
-							+ "&artistName=" + paymentDTO.getTrackInfoDTO().getArtistName() 
-							+ "&trackName=" + paymentDTO.getTrackInfoDTO().getTrackName(),
-				
-				"failure", paymentDTO.getFailedUrl(), "pending", ""));
-        preference.put("auto_return", "approved");
+	public String generatePaymentId(PaymentDTO paymentDTO) throws Exception {
+		try {
+			Map<String, Object> preference = new HashMap<>();
 
-        RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<Map> response = restTemplate.postForEntity(
-                "https://api.mercadopago.com/checkout/preferences?access_token=" + paymentDTO.getToken(),
-                preference,
-                Map.class
-        );
+			preference.put("items", List.of(Map.of("title", paymentDTO.getDescription(), "unit_price",
+					Double.parseDouble(paymentDTO.getPrice().toString()), "quantity", paymentDTO.getQuantity()// ,
+			// "currency_id", paymentDTO.getCurrency() consider currency set on MP account
+			)));
 
-        Map<String, Object> responseBody = response.getBody();
-        if (responseBody != null && response.getStatusCode() == HttpStatus.CREATED) {
-            return (String) responseBody.get("id");
-        } else {
-        	throw new Exception(HttpStatus.INTERNAL_SERVER_ERROR.toString());
-        }
-	
+			preference.put("back_urls", Map.of("success", buildSuccessUrl(paymentDTO), "failure",
+					paymentDTO.getFailedUrl(), "pending", ""));
+			preference.put("auto_return", "approved");
+
+			return sendPreferenceRequest(preference, paymentDTO);
+
+		} catch (Exception e) {
+			throw e;
+		}
 	}
-	
+
+	private String buildSuccessUrl(PaymentDTO paymentDTO) throws Exception {
+
+		return paymentDTO.getSuccessUrl() + "?" + new StringJoiner("&")
+				.add("trackURI=" + paymentDTO.getTrackInfoDTO().getTrackUri())
+				.add("amount=" + paymentDTO.getPrice().toString())
+				.add("albumCover=" + paymentDTO.getTrackInfoDTO().getAlbumCover())
+				.add("artistName=" + sanitizeForUrl(paymentDTO.getTrackInfoDTO().getArtistName()))
+				.add("trackName=" + sanitizeForUrl(paymentDTO.getTrackInfoDTO().getTrackName())).toString();
+	}
+
+	private String sanitizeForUrl(String input) {
+		return input.replaceAll("'", "");
+	}
+
+
+	private String sendPreferenceRequest(Map<String, Object> preference, PaymentDTO paymentDTO) throws Exception {
+		RestTemplate restTemplate = new RestTemplate();
+		ResponseEntity<Map> response = restTemplate.postForEntity(
+				"https://api.mercadopago.com/checkout/preferences?access_token=" + paymentDTO.getToken(), preference,
+				Map.class);
+
+		Map<String, Object> responseBody = response.getBody();
+		if (responseBody != null && response.getStatusCode() == HttpStatus.CREATED) {
+			return (String) responseBody.get("id");
+		} else {
+			throw new Exception(HttpStatus.INTERNAL_SERVER_ERROR.toString());
+		}
+	}
 
 }

@@ -30,15 +30,19 @@ public class SpotifyAuthService {
     private String CLIENT_ID;
     @Value("${SPOTIFY_PLAYBACK_SDK_CLIENT_SECRET}")
     private String CLIENT_SECRET;
+    @Value("${CLIENT_ROOT_URL}")
+    private String CLIENT_ROOT_URL;
+    @Value("${SERVER_ROOT_URL}")
+    private String SERVER_ROOT_URL;
     
     @Autowired
     private IAccessTokenResponseRepository accessTokenResponseRepository;
 
     //FIXME
-    private static final String REDIRECT_URI = "http://localhost:8080/spotify/callback";
+    private final String REDIRECT_URI = "http://localhost:8080/api/spotify/callback";
     
-    private static final String CLIENT_URL_ADMIN_PANEL = "http://localhost:5173/admin/dashboard";
-    private static final String CLIENT_URL_LOGIN_ERROR = "http://localhost:5173/admin/login?error=No se pudo conectar con Spotify";
+    private final String CLIENT_URL_ADMIN_PANEL = "http://localhost:3000/admin/dashboard";
+    private final String CLIENT_URL_LOGIN_ERROR = "http://localhost:3000/admin/login?error=No se pudo conectar con Spotify";
 	
 	private AccessTokenResponse requestAccessTokenAndRefreshToken(String authorizationCode, String state) throws IOException {
 		

@@ -11,7 +11,7 @@ import org.springframework.web.servlet.view.RedirectView;
 import com.juke.api.service.SpotifyAuthService;
 
 @RestController
-@RequestMapping("/spotify")
+@RequestMapping("/api/spotify")
 @CrossOrigin(origins = { "http://localhost:3000", "http://localhost:8080", "http://localhost:5173", "https://accounts.spotify.com", "*" })
 public class SpotifyAuthController {
 

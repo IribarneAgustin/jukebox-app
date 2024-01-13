@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.juke.api.service.AdminConfigurationService;
 
 @RestController
-@RequestMapping("/admin")
+@RequestMapping("/api/admin")
 public class AdminConfigurationController {
 	
 	@Autowired
