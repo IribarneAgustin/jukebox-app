@@ -22,10 +22,7 @@ public class TrackQueueService {
 		
 	@Autowired
 	private AdminConfigurationService adminConfiguration;
-	
-	@Value("${MERCADO_PAGO_TOKEN}")
-	public String MERCADO_PAGO_TOKEN;
-	
+		
 	@Value("${MERCADO_PAGO_SUCCESS_URL}")
 	public String MERCADO_PAGO_SUCCESS_URL;
 	
@@ -37,6 +34,9 @@ public class TrackQueueService {
 
 	@Autowired
 	private SpotifyAuthService spotifyAuthService;
+	
+	@Autowired
+	private MercadoPagoAuthService mercadoPagoAuthService;
 	
 	public ResponseEntity<String> generatePaymentId(TrackInfoDTO trackInfoDTO, String paymentGateway) {
 		
@@ -85,7 +85,7 @@ public class TrackQueueService {
 		}
 	}
 	
-	private PaymentDTO createPaymentDTO(BigDecimal trackPrice, TrackInfoDTO trackInfoDTO) {
+	private PaymentDTO createPaymentDTO(BigDecimal trackPrice, TrackInfoDTO trackInfoDTO) throws Exception {
 		PaymentDTO paymentDTO = new PaymentDTO();
 		paymentDTO.setPrice(trackPrice.doubleValue());
 		paymentDTO.setQuantity(1);
@@ -93,23 +93,30 @@ public class TrackQueueService {
 		paymentDTO.setTrackInfoDTO(trackInfoDTO);
 		//paymentDTO.setCurrency(null);TODO get it from config
 		
-		 //FIXME when be implemented other payments gateways
-		paymentDTO.setToken(MERCADO_PAGO_TOKEN); 
+		 //FIXME (make it abstract)
+		paymentDTO.setToken(mercadoPagoAuthService.getToken()); 
 		paymentDTO.setSuccessUrl(MERCADO_PAGO_SUCCESS_URL);
 		paymentDTO.setFailedUrl(CLIENT_HOME_URL);
 		return paymentDTO;
 	}
 	
 	private boolean isAvailableTime(LocalTime fromHour, LocalTime toHour) {
-	    LocalTime currentTime = LocalTime.now();
+		Boolean result = false;
+		LocalTime currentTime = LocalTime.now();
+		
+		if (fromHour.equals(toHour)) {
+			//Always available
+			result = true;
+		}
+		if (fromHour.isAfter(toHour)) {
+			// Range crosses midnight
+			result = !currentTime.isBefore(fromHour) || !currentTime.isAfter(toHour);
+		} else {
+			// Normal range without crossing midnight
+			result = !currentTime.isBefore(fromHour) && !currentTime.isAfter(toHour);
+		}
 
-	    if (fromHour.isAfter(toHour)) {
-	        // Range crosses midnight
-	        return !currentTime.isBefore(fromHour) || !currentTime.isAfter(toHour);
-	    } else {
-	        // Normal range without crossing midnight
-	        return !currentTime.isBefore(fromHour) && !currentTime.isAfter(toHour);
-	    }
+		return result;
 	}
 
 

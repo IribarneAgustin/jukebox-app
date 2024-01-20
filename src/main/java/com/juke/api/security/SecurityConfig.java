@@ -28,6 +28,7 @@ public class SecurityConfig {
 						.requestMatchers("/api/spotify/**").permitAll()
 						.requestMatchers("/api/payment/**").permitAll()
 						.requestMatchers("/ws/**").permitAll()
+						.requestMatchers("/api/mp/**").permitAll()
 						.anyRequest().authenticated())
 	            .sessionManagement(sessionManager -> sessionManager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 	            .authenticationProvider(authProvider)
