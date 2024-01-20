@@ -24,9 +24,11 @@ public class SecurityConfig {
 		return http.csrf(csrf -> csrf.disable())
 				.authorizeHttpRequests(
 						authRequest -> authRequest
-						.requestMatchers("/admin/login").permitAll()
-						.requestMatchers("/spotify/**").permitAll()
-						.requestMatchers("/payment/**").permitAll()
+						.requestMatchers("/api/admin/login").permitAll()
+						.requestMatchers("/api/spotify/**").permitAll()
+						.requestMatchers("/api/payment/**").permitAll()
+						.requestMatchers("/ws/**").permitAll()
+						.requestMatchers("/api/mp/**").permitAll()
 						.anyRequest().authenticated())
 	            .sessionManagement(sessionManager -> sessionManager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 	            .authenticationProvider(authProvider)

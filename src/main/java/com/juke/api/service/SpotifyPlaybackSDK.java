@@ -102,6 +102,7 @@ public class SpotifyPlaybackSDK {
 					.setClientSecret(SPOTIFY_PLAYBACK_SDK_CLIENT_SECRET).build();
 			
 			spotifyApi.setAccessToken(token);
+			//TODO valid and sent error message
 			Device[] devices = spotifyApi.getUsersAvailableDevices().build().execute();
 			String deviceId = devices[0].getId();
         	

@@ -1,7 +1,6 @@
 package com.juke.api.repository;
 
 import java.math.BigDecimal;
-import java.time.Month;
 import java.util.List;
 import java.util.Map;
 
@@ -15,7 +14,7 @@ import com.juke.api.model.Transaction;
 @Repository
 public interface ITransactionRepository extends JpaRepository<Transaction, Long> {
 
-	public List<Transaction> findLastTenByOrderByCreationTimestampDesc();
+	public List<Transaction> findFirst10ByOrderByCreationTimestampDesc();
 
 	public List<Transaction> findAllByActiveTrueOrderByCreationTimestampDesc();
 

@@ -9,9 +9,10 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.view.RedirectView;
 
 import com.juke.api.service.SpotifyAuthService;
+import com.juke.api.utils.AuthUtils;
 
 @RestController
-@RequestMapping("/spotify")
+@RequestMapping("/api/spotify")
 @CrossOrigin(origins = { "http://localhost:3000", "http://localhost:8080", "http://localhost:5173", "https://accounts.spotify.com", "*" })
 public class SpotifyAuthController {
 
@@ -24,7 +25,7 @@ public class SpotifyAuthController {
     //Dispatched by the client redirection after login successfully completed
     @GetMapping("/login")
     public RedirectView login() throws Exception {
-        String state = spotifyAuthService.generateRandomString(16);
+        String state = AuthUtils.generateRandomString(16);//spotifyAuthService.generateRandomString(16);
         String authorizationUrl = spotifyAuthService.buildAuthorizationUrl(state);
         return new RedirectView(authorizationUrl);
     }

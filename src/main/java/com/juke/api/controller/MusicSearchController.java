@@ -13,7 +13,7 @@ import com.juke.api.service.SpotifyWebApiService;
 import com.juke.api.service.TransactionService;
 import com.juke.api.dto.TrackInfoDTO;
 @RestController
-@RequestMapping("/spotify")
+@RequestMapping("/api/spotify")
 public class MusicSearchController {
 	
 	@Autowired

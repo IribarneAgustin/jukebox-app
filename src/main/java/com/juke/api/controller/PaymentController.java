@@ -2,6 +2,7 @@ package com.juke.api.controller;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.sql.Timestamp;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,11 +17,14 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.view.RedirectView;
 
 import com.juke.api.dto.TrackInfoDTO;
+import com.juke.api.model.Notification;
+import com.juke.api.service.MercadoPagoAuthService;
+import com.juke.api.service.NotificationService;
 import com.juke.api.service.TrackQueueService;
 import com.juke.api.service.TransactionService;
 
 @RestController
-@RequestMapping("payment")
+@RequestMapping("/api/payment")
 @CrossOrigin(origins = { "http://localhost:3000", "http://localhost:8080", "http://localhost:5173", "*" })
 public class PaymentController {
 
@@ -30,6 +34,9 @@ public class PaymentController {
 	@Autowired
 	private TransactionService transactionService;
 	
+	@Autowired
+	private NotificationService notificationService;
+
 	@Value("${CLIENT_SUCCESS_URL}")
 	private String CLIENT_SUCCESS_URL;
 	
@@ -55,15 +62,16 @@ public class PaymentController {
 		String redirectUrl = CLIENT_SUCCESS_URL;
 		try {
 			trackQueueService.enqueueTrack(trackURI);
-			transactionService.saveNewTransaction(paymentId, trackURI, amount, albumCover, artistName, trackName);
+			transactionService.saveNewTransactionAndTrackIfNotExists(paymentId, trackURI, amount, albumCover, artistName, trackName);
+			notificationService.saveAndSentToWebSocket(new Notification("Se agregó la canción " + artistName + " - " + trackName, new Timestamp(System.currentTimeMillis())));
 		} catch (Exception e) {
-			 String encodedErrorMessage = URLEncoder.encode("El pago se realizó correctamente, pero ocurrió un error al enviar la canción a la cola. Por favor, comuníqueselo al dueño del establecimiento. Número de pago: " + paymentId, "UTF-8");
-	         redirectUrl = CLIENT_FAILED_URL + "?message=" + encodedErrorMessage;
-
+			String encodedErrorMessage = URLEncoder.encode("El pago se realizó correctamente, pero ocurrió un error al enviar la canción a la cola. Por favor, comuníqueselo al dueño del establecimiento. Número de pago: " + paymentId, "UTF-8");
+	        redirectUrl = CLIENT_FAILED_URL + "?message=" + encodedErrorMessage;
 			e.printStackTrace();
 		}
 
 		return new RedirectView(redirectUrl);
 	}
+	
 
 }

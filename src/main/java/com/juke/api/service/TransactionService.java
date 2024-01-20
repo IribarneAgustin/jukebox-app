@@ -2,13 +2,10 @@ package com.juke.api.service;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
-import java.time.Month;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -30,7 +27,7 @@ public class TransactionService {
 	@Autowired
 	private TrackService trackService;
 
-	public void saveNewTransaction(String paymentId, String trackURI, Double amount, String albumCover,
+	public void saveNewTransactionAndTrackIfNotExists(String paymentId, String trackURI, Double amount, String albumCover,
 			String artistName, String trackName) throws Exception {
 		try {
 			Transaction transaction = new Transaction();
@@ -57,12 +54,12 @@ public class TransactionService {
 		}
 	}
 
-	public List<Transaction> findLastTenByOrderByCreationTimestampDesc() {
-		return transactionRepository.findLastTenByOrderByCreationTimestampDesc();
+	public List<Transaction> findFirst10ByOrderByCreationTimestampDesc() {
+		return transactionRepository.findFirst10ByOrderByCreationTimestampDesc();
 	}
 
 	public List<TrackInfoDTO> getTrackQueue() {
-		List<Transaction> trxList = findLastTenByOrderByCreationTimestampDesc();
+		List<Transaction> trxList = findFirst10ByOrderByCreationTimestampDesc();
 		ArrayList<TrackInfoDTO> trackInfoList = new ArrayList<>();
 		if (trxList != null && !trxList.isEmpty()) {
 
