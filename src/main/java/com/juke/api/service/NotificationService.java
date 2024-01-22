@@ -34,8 +34,8 @@ public class NotificationService {
 	    messagingTemplate.convertAndSend("/topic/notifications", notification);
 	}
 
-	public List<Notification> findFirst10ByOrderByCreationTimestampDesc() {
-		return notificationRepository.findFirst10ByOrderByCreationTimestampDesc();
+	public List<Notification> findFirst5ByOrderByCreationTimestampDesc() {
+		return notificationRepository.findFirst5ByOrderByCreationTimestampDesc();
 	}
 
 }

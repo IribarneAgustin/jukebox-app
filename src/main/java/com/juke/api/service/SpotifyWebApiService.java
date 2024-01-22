@@ -1,9 +1,15 @@
 package com.juke.api.service;
 
+import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -19,6 +25,7 @@ import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.juke.api.model.Track;
 
 @Service
 public class SpotifyWebApiService {
@@ -32,6 +39,7 @@ public class SpotifyWebApiService {
 	public static final String SPOTIFY_WEB_API_TOKEN_ENDPOINT = "https://accounts.spotify.com/api/token";
 	private String accessToken;
 	private Instant tokenExpirationTime;
+	
 
 	private String getAccessToken() {
 		String accessTokenResponse = null;
@@ -92,29 +100,92 @@ public class SpotifyWebApiService {
 	}
 
 	
-	public ResponseEntity<String> getTrackInformationByName(String trackName) {
-        RestTemplate restTemplate = new RestTemplate();
-        HttpHeaders headers = new HttpHeaders();
-        ResponseEntity<String> response = null;
+	public ResponseEntity<String> getTrackInformationByName(String trackOrArtistName) {
+	    RestTemplate restTemplate = new RestTemplate();
+	    HttpHeaders headers = new HttpHeaders();
 
+	    headers.set("Authorization", "Bearer " + getOrRefreshAccessToken());
+	    HttpEntity<String> entity = new HttpEntity<>(headers);
+	    
+	    String url = "https://api.spotify.com/v1/search?q=" + trackOrArtistName + "&type=track,artist&sort=popularity";
+
+	    ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+
+	    return response;
+	}
+
+
+	public List<String> getPlaylistIdsForCountry(String country) {
+		
+	    List<String> playlistIds = new ArrayList<>();
+	    RestTemplate restTemplate = new RestTemplate();
+		ObjectMapper objectMapper = new ObjectMapper();
+		
+	    try {
+	        HttpHeaders headers = new HttpHeaders();
+	        headers.set("Authorization", "Bearer " + getOrRefreshAccessToken());
+
+	        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+	        String url = "https://api.spotify.com/v1/browse/featured-playlists?country=" + country  + "&limit=50";
+
+	        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+
+	        if (response.getStatusCode().is2xxSuccessful()) {
+	            JsonNode jsonNode = objectMapper.readTree(response.getBody());
+	            jsonNode.get("playlists").get("items").forEach(item -> {
+	                String playlistId = item.get("id").asText();
+	                playlistIds.add(playlistId);
+	            });
+	        } else {
+	            System.err.println("Failed to retrieve playlists. Status code: " + response.getStatusCode());
+	        }
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+
+	    return playlistIds;
+	}
+
+
+    public List<Track> getPlaylistTracks(String playlistId) {
+        List<Track> tracks = new ArrayList<>();
+	    RestTemplate restTemplate = new RestTemplate();
+		ObjectMapper objectMapper = new ObjectMapper();
+		
         try {
-            headers.set("Authorization", "Bearer " + getOrRefreshAccessToken());
+            HttpHeaders headers = new HttpHeaders();
+	        headers.set("Authorization", "Bearer " + getOrRefreshAccessToken());
+	        
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            String encodedTrackName = URLEncoder.encode(trackName, StandardCharsets.UTF_8.toString());
+            String url = "https://api.spotify.com/v1/playlists/" + playlistId + "/tracks";
 
-            String countryCode = "AR";//Locale.getDefault().getCountry();
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
 
-            String url = "https://api.spotify.com/v1/search?q=" + encodedTrackName + "&type=track&market=" + countryCode ;
-
-            response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
-
+            if (response.getStatusCode().is2xxSuccessful()) {
+                JsonNode jsonNode = objectMapper.readTree(response.getBody());
+                jsonNode.get("items").forEach(item -> {
+                    JsonNode trackNode = item.get("track");
+                    Track track = new Track(
+                            trackNode.get("album").get("images").get(0).get("url").asText(),
+                            trackNode.get("artists").get(0).get("name").asText(),
+                            trackNode.get("name").asText(),
+                            trackNode.get("id").asText()
+                    );
+                    tracks.add(track);
+                });
+            } else {
+                System.err.println("Failed to retrieve tracks. Status code: " + response.getStatusCode());
+            }
         } catch (Exception e) {
             e.printStackTrace();
-            response = new ResponseEntity<String>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        return response;
+
+        return tracks;
     }
-	
+
+
+
 
 }
