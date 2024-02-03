@@ -10,13 +10,14 @@ public class PaymentDTO {
 	private String successUrl;
 	private String failedUrl;
 	private TrackInfoDTO trackInfoDTO;
-
+	private Double marketplaceFee;
+	
 	public PaymentDTO() {
 
 	}
 
 	public PaymentDTO(String description, Double price, Integer quantity, String currency, String token,
-			String successUrl, String failedUrl, TrackInfoDTO trackInfoDTO) {
+			String successUrl, String failedUrl, TrackInfoDTO trackInfoDTO, Double marketplaceFee) {
 		this.description = description;
 		this.price = price;
 		this.quantity = quantity;
@@ -25,6 +26,7 @@ public class PaymentDTO {
 		this.successUrl = successUrl;
 		this.failedUrl = failedUrl;
 		this.trackInfoDTO = trackInfoDTO;
+		this.marketplaceFee = marketplaceFee;
 	}
 
 	public TrackInfoDTO getTrackInfoDTO() {
@@ -89,6 +91,14 @@ public class PaymentDTO {
 
 	public void setCurrency(String currency) {
 		this.currency = currency;
+	}
+
+	public Double getMarketplaceFee() {
+		return marketplaceFee;
+	}
+
+	public void setMarketplaceFee(Double marketplaceFee) {
+		this.marketplaceFee = marketplaceFee;
 	}
 
 }

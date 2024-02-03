@@ -18,8 +18,8 @@ public class NotificationController {
 	private NotificationService notificationService;
 	
 	@GetMapping("/get")
-	public List<Notification> findFirst10ByOrderByCreationTimestampDesc() {
-		return notificationService.findFirst10ByOrderByCreationTimestampDesc();
+	public List<Notification> findFirst5ByOrderByCreationTimestampDesc() {
+		return notificationService.findFirst5ByOrderByCreationTimestampDesc();
 	}
 
 }

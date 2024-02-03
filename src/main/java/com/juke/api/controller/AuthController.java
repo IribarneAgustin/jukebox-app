@@ -31,10 +31,10 @@ public class AuthController {
 	        String jwtToken = authResponse.getToken();
 
 	        // Set the cookie with SameSite attribute as "None" for cross-origin requests
-	        String cookieHeader = String.format("jwtToken=%s; SameSite=None; Secure; HttpOnly; Max-Age=%d; Path=/", jwtToken, 60 * 60); //TODO handle expiration in client
+	        String cookieHeader = String.format("jwtToken=%s; SameSite=None; Secure; HttpOnly; Max-Age=%d; Path=/", jwtToken, 180 * 24 * 60 * 60); //6 months
 
 	        response.setHeader("Access-Control-Allow-Credentials", "true");
-	        response.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
+	        response.setHeader("Access-Control-Allow-Origin", "*");
 	        response.setHeader("Set-Cookie", cookieHeader);
 
 	        return ResponseEntity.ok(authResponse);
@@ -64,7 +64,7 @@ public class AuthController {
 	        String cookieHeader = String.format("jwtToken=%s; SameSite=None; Secure; HttpOnly; Max-Age=%d; Path=/", "", 60 * 60);
 
 	        response.setHeader("Access-Control-Allow-Credentials", "true");
-	        response.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
+	        response.setHeader("Access-Control-Allow-Origin", "*");
 	        response.setHeader("Set-Cookie", cookieHeader);
 
             return ResponseEntity.ok("Logged out successfully");

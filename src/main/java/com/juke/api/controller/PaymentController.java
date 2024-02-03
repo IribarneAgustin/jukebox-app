@@ -18,7 +18,6 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import com.juke.api.dto.TrackInfoDTO;
 import com.juke.api.model.Notification;
-import com.juke.api.service.MercadoPagoAuthService;
 import com.juke.api.service.NotificationService;
 import com.juke.api.service.TrackQueueService;
 import com.juke.api.service.TransactionService;

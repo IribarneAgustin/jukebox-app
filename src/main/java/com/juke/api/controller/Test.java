@@ -3,7 +3,6 @@ package com.juke.api.controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -12,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api")
 public class Test {
+	
 	
 	@GetMapping("/test")
 	public ResponseEntity<String> test() {
@@ -32,6 +32,5 @@ public class Test {
         // Send the processed notification to all subscribers
         messagingTemplate.convertAndSend("/topic/notifications", processedNotification);
     }
-
 
 }

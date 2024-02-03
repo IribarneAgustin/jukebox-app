@@ -16,7 +16,6 @@ import com.juke.api.dto.TrackInfoDTO;
 import com.juke.api.model.Track;
 import com.juke.api.model.Transaction;
 import com.juke.api.repository.ITransactionRepository;
-import com.juke.api.utils.SpotifyUtils;
 
 @Service
 public class TransactionService {
@@ -31,13 +30,13 @@ public class TransactionService {
 			String artistName, String trackName) throws Exception {
 		try {
 			Transaction transaction = new Transaction();
-			String spotifyId = SpotifyUtils.extractSpotifyId(trackURI);
-			Track track = trackService.findBySpotifyId(spotifyId);
+			//String spotifyId = SpotifyUtils.extractSpotifyId(trackURI);
+			Track track = trackService.findBySpotifyURI(trackURI);
 			if (track == null) {
 				track = new Track();
 				track.setAlbumCover(albumCover);
 				track.setArtistName(artistName);
-				track.setSpotifyId(spotifyId);
+				track.setSpotifyURI(trackURI);
 				track.setTrackName(trackName);
 				trackService.save(track);
 			}

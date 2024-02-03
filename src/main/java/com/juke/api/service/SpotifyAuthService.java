@@ -23,7 +23,7 @@ import com.juke.api.repository.IAccessTokenResponseRepository;
 import com.juke.api.utils.AdminConfigurationConstants;
 
 @Service
-public class SpotifyAuthService {
+public class SpotifyAuthService implements IOAuthHandler {
 	
 	
     @Value("${SPOTIFY_PLAYBACK_SDK_CLIENT_ID}")
@@ -44,7 +44,7 @@ public class SpotifyAuthService {
     private final String CLIENT_URL_ADMIN_PANEL = "http://localhost:3000/admin/dashboard";
     private final String CLIENT_URL_LOGIN_ERROR = "http://localhost:3000/admin/login?error=No se pudo conectar con Spotify";
 	
-	private AccessTokenResponse requestAccessTokenAndRefreshToken(String authorizationCode, String state) throws IOException {
+	private AccessTokenResponse requestAccessTokenAndRefreshToken(String authorizationCode) throws IOException {
 		
         String tokenEndpoint = "https://accounts.spotify.com/api/token";
         String credentials = CLIENT_ID + ":" + CLIENT_SECRET;
@@ -98,6 +98,7 @@ public class SpotifyAuthService {
         return new AccessTokenResponse(accessToken, refreshToken, expirationTime, AdminConfigurationConstants.ACCESS_TOKEN_RESPONSE_SERVICE_ID_SPOTIFY_SDK);
     }
     
+    @Override
     public String buildAuthorizationUrl(String state) throws IOException {
         String scope = "user-read-playback-state user-modify-playback-state playlist-modify-public playlist-modify-private";
 
@@ -152,12 +153,13 @@ public class SpotifyAuthService {
     }
     
     //We always save one row by AccessTokenResponse serviceId
-    public RedirectView saveAccesTokenAndRefreshToken(String code, String state) {
+    @Override
+    public RedirectView saveAccesTokenAndRefreshToken(String code) {
     	AccessTokenResponse newTokenResponse;
     	Optional<AccessTokenResponse> storedTokenOptional;
     	RedirectView response = null;
 		try {
-			newTokenResponse = requestAccessTokenAndRefreshToken(code, state);
+			newTokenResponse = requestAccessTokenAndRefreshToken(code);
 			storedTokenOptional = accessTokenResponseRepository.findByServiceId(AdminConfigurationConstants.ACCESS_TOKEN_RESPONSE_SERVICE_ID_SPOTIFY_SDK);
 			if (storedTokenOptional.isPresent()){
 				//Update values
@@ -183,9 +185,13 @@ public class SpotifyAuthService {
         return new Timestamp(expirationTimeMillis);
     }
     
+    /*
+    *
+    * This method works when the admin was logged succesfully and generated the first row with valid and refresh token. After that, it will refresh if necessary
+    */
+    @Override
 	public String getToken() throws Exception {
-		//This method works when the admin was logged succesfully and generated the first row with valid and refresh token. After that, it will refresh if necessary
-		Optional<AccessTokenResponse> optionalToken = accessTokenResponseRepository.findByServiceId(AdminConfigurationConstants.ACCESS_TOKEN_RESPONSE_SERVICE_ID_SPOTIFY_SDK); // TODO improve
+		Optional<AccessTokenResponse> optionalToken = accessTokenResponseRepository.findByServiceId(AdminConfigurationConstants.ACCESS_TOKEN_RESPONSE_SERVICE_ID_SPOTIFY_SDK);
 		Timestamp currentTimeMillis = new Timestamp(System.currentTimeMillis());
 		String token = null;
 

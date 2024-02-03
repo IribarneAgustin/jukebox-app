@@ -42,8 +42,7 @@ public class SpotifyPlaybackSDK {
 			JsonArray json = new JsonArray();
 			json.add(trackUri);
 
-			Future<String> playbackFuture = spotifyApi.startResumeUsersPlayback().uris(json).device_id(deviceId).build()
-					.executeAsync();
+			Future<String> playbackFuture = spotifyApi.startResumeUsersPlayback().uris(json).device_id(deviceId).build().executeAsync();
 
 			playbackFuture.get();
 			System.out.println("Playback started!");
@@ -53,9 +52,8 @@ public class SpotifyPlaybackSDK {
 		}
 	}
 	
-	public void addTrackToPlaylist(String trackUri, String accessToken, String spotifyPlaylistID) {
+	public void addTrackToPlaylist(String trackUri, String accessToken, String spotifyPlaylistID) throws Exception {
 	    try {
-	        //disableShuffle(accessToken);
 	        String apiUrl = "https://api.spotify.com/v1/playlists/" + spotifyPlaylistID + "/tracks";
 
 	        // Prepare the JSON payload using GSON
@@ -85,10 +83,6 @@ public class SpotifyPlaybackSDK {
 	            System.out.println("Track added to the playlist!");
 	        } else {
 	            System.out.println("Error: " + response.body());
-	            //Here the paymant was executed correctly
-	            //we dont throw an exception with the aim to save the transaction anyway, so the admin will be aware of the payment previously made. 
-	            //The user will be notified with payment id, so he can check and add manually the song to the playlist
-	        	//throw new Exception("Ocurrió un error al enviar la canción a la cola");
 	        }
 
 	    } catch (Exception e) {
@@ -96,7 +90,7 @@ public class SpotifyPlaybackSDK {
 	    }
 	}
 	
-    public void enqueueTrack(String trackUri, String token) {
+    public void enqueueTrack(String trackUri, String token) throws Exception {
         try {
 			SpotifyApi spotifyApi = new SpotifyApi.Builder().setClientId(SPOTIFY_PLAYBACK_SDK_CLIENT_ID)
 					.setClientSecret(SPOTIFY_PLAYBACK_SDK_CLIENT_SECRET).build();
@@ -122,36 +116,13 @@ public class SpotifyPlaybackSDK {
                 System.out.println("Track enqueued!");
             } else {
                 System.out.println("Error: " + response.body());
+	        	throw new Exception("Ocurrió un error al encolar la canción en spotify");
             }
 
         } catch (Exception e) {
             System.out.println("Error: " + e.getMessage());
+        	throw new Exception("Ocurrió un error al encolar la canción en spotify");
         }
     }
     
-    private void disableShuffle(String accessToken) throws Exception {
-        String apiUrl = "https://api.spotify.com/v1/me/player/shuffle?state=false";
-
-        // Create the HTTP client
-        HttpClient httpClient = HttpClient.newHttpClient();
-
-        // Build the HTTP request
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(apiUrl))
-                .header("Authorization", "Bearer " + accessToken)
-                .PUT(HttpRequest.BodyPublishers.noBody())
-                .build();
-
-        // Send the HTTP request and receive the response
-        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-
-        // Check the HTTP status code
-        if (response.statusCode() == 204) {
-            System.out.println("Shuffle disabled!");
-        } else {
-            System.out.println("Error disabling shuffle: " + response.body());
-        }
-    }
-
-
 }
