@@ -37,7 +37,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 		String token = getTokenFromRequest(request);
 
-		if (token == null && request.getRequestURI() != null && !"/api/admin/login".equals(request.getRequestURI()) && !request.getRequestURI().startsWith("/ws") && !request.getRequestURI().startsWith("/api/mp/auth/callback") && !request.getRequestURI().startsWith("/api/spotify/track/list/queue")) {
+		if (token == null && request.getRequestURI() != null && !"/api/admin/login".equals(request.getRequestURI()) 
+				&& !request.getRequestURI().startsWith("/ws") 
+				&& !request.getRequestURI().startsWith("/api/mp/auth/callback") 
+				&& !request.getRequestURI().startsWith("/api/spotify/track/list/queue") 
+				&& !request.getRequestURI().startsWith("/api/spotify/track") 
+				&& !request.getRequestURI().startsWith("/api/payment")) {
 			token = getTokenFromCookies(request);
 			if (token == null) {
 				response.setStatus(HttpStatus.UNAUTHORIZED.value());

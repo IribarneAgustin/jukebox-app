@@ -5,16 +5,28 @@ import java.util.regex.Pattern;
 
 public class SpotifyUtils {
 	
-    public static String extractSpotifyId(String spotifyUri) {
+	public static final Integer PLAYLIST_UPDATE_OFFSET_LIMIT = 300;
+	
+	public static String extractSpotifyId(String spotifyUri) {
+		String result = spotifyUri;
+		
+		// Check if the input is already a Spotify ID (alphanumeric)
+		if (!spotifyUri.matches("[a-zA-Z0-9]+")) {
 
-        Pattern pattern = Pattern.compile("spotify:(track|album|artist):([a-zA-Z0-9]+)");
-        Matcher matcher = pattern.matcher(spotifyUri);
+			// Pattern to match Spotify URIs
+			Pattern pattern = Pattern.compile("spotify:(track|album|artist):([a-zA-Z0-9]+)");
+			Matcher matcher = pattern.matcher(spotifyUri);
 
-        if (matcher.matches()) {
-            return matcher.group(2);
-        } else {
-            throw new IllegalArgumentException("Invalid Spotify URI");
-        }
-    }
+			// Check if the input matches the pattern
+			if (matcher.matches()) {
+				return matcher.group(2); // Return the Spotify ID
+			} else {
+				throw new IllegalArgumentException("Invalid Spotify URI");
+			}
+		}
+
+		return result;
+	}
+
 
 }

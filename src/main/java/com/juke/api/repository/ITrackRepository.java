@@ -12,16 +12,26 @@ import com.juke.api.model.Track;
 @Repository
 public interface ITrackRepository extends JpaRepository<Track,Long>{
 	
-	public Track findBySpotifyId(String spotifyId);
+	public Track findBySpotifyURI(String spotifyURI);
 	
-	List<Track> findByArtistNameContainingIgnoreCaseOrTrackNameContainingIgnoreCase(String artistName, String trackName);
+	public List<Track> findByArtistNameContainingIgnoreCaseOrTrackNameContainingIgnoreCase(String artistName, String trackName);
 	
-	@Query(value = "SELECT * FROM Track " +
-            "WHERE LOWER(artist_name) LIKE LOWER(CONCAT('%', :term, '%')) OR " +
-            "LOWER(track_name) LIKE LOWER(CONCAT('%', :term, '%')) OR " +
-            "LOWER(CONCAT(artist_name, ' ', track_name)) LIKE LOWER(CONCAT('%', :term, '%')) OR " +
-            "LOWER(CONCAT(track_name, ' ', artist_name)) LIKE LOWER(CONCAT('%', :term, '%'))",
-            nativeQuery = true)
-    List<Track> searchTracks(@Param("term") String term);
+	@Query("SELECT t FROM Track t " +
+		       "WHERE LOWER(t.description) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
+		       "LOWER(t.artistName) LIKE LOWER(:searchTerm) OR " +
+		       "LOWER(t.trackName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) " +
+		       "ORDER BY CASE " +
+		       "  WHEN LOWER(t.artistName) = LOWER(:searchTerm) THEN 0 " +
+		       "  WHEN LOWER(t.trackName) = LOWER(:searchTerm) THEN 0 " +
+		       "  ELSE 1 " +
+		       "END, t.artistName " + 
+		       "LIMIT 5")
+	public List<Track> findByDescriptionOrArtistNameOrTrackNameContainingIgnoreCase(@Param("searchTerm") String searchTerm);
+
+
+
+
+
+	
 
 }

@@ -12,14 +12,16 @@ public class Track extends PersistentObject{
 	private String artistName;
 	private String trackName;
 	@Column(unique = true)
-	private String spotifyId;
+	private String spotifyURI;
+	private String description;
 
-	public Track(String albumCover, String artistName, String trackName, String spotifyID) {
+	public Track(String albumCover, String artistName, String trackName, String spotifyURI,String description) {
 		super();
 		this.albumCover = albumCover;
 		this.artistName = artistName;
 		this.trackName = trackName;
-		this.spotifyId = spotifyID;
+		this.spotifyURI = spotifyURI;
+		this.setDescription(description);
 	}
 
 	public Track() {
@@ -50,12 +52,20 @@ public class Track extends PersistentObject{
 		this.trackName = trackName;
 	}
 
-	public String getSpotifyId() {
-		return spotifyId;
+	public String getSpotifyURI() {
+		return spotifyURI;
 	}
 
-	public void setSpotifyId(String spotifyID) {
-		this.spotifyId = spotifyID;
+	public void setSpotifyURI(String spotifyID) {
+		this.spotifyURI = spotifyID;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
 	}
 
 }

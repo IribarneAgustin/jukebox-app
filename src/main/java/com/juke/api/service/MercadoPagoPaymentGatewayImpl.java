@@ -1,41 +1,16 @@
 package com.juke.api.service;
 
 import java.math.BigDecimal;
-import java.net.URLEncoder;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
-import java.util.UUID;
-
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
 import org.springframework.web.client.RestTemplate;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.juke.api.dto.PaymentDTO;
-import com.mercadopago.MercadoPagoConfig;
-import com.mercadopago.client.common.PhoneRequest;
-import com.mercadopago.client.payment.PaymentAdditionalInfoPayerRequest;
-import com.mercadopago.client.payment.PaymentAdditionalInfoRequest;
-import com.mercadopago.client.payment.PaymentClient;
-import com.mercadopago.client.payment.PaymentCreateRequest;
-import com.mercadopago.client.payment.PaymentItemRequest;
-import com.mercadopago.client.payment.PaymentOrderRequest;
-import com.mercadopago.client.payment.PaymentPayerRequest;
-import com.mercadopago.client.payment.PaymentReceiverAddressRequest;
-import com.mercadopago.client.payment.PaymentShipmentsRequest;
-import com.mercadopago.client.paymentmethod.PaymentMethodClient;
-import com.mercadopago.core.MPRequestOptions;
-import com.mercadopago.exceptions.MPApiException;
-import com.mercadopago.exceptions.MPException;
-import com.mercadopago.resources.payment.Payment;
 
 public class MercadoPagoPaymentGatewayImpl implements IPaymentGateway {
 
@@ -48,7 +23,6 @@ public class MercadoPagoPaymentGatewayImpl implements IPaymentGateway {
 	public String generatePaymentId(PaymentDTO paymentDTO) throws Exception {
 		try {
 			Map<String, Object> preference = buildPreference(paymentDTO);
-			//applyServiceFee(paymentDTO);
 			String paymentId = getPreferenceId(preference, paymentDTO);
 
 			return paymentId;
@@ -70,7 +44,7 @@ public class MercadoPagoPaymentGatewayImpl implements IPaymentGateway {
 		preference.put("back_urls",
 				Map.of("success", buildSuccessUrl(paymentDTO), "failure", paymentDTO.getFailedUrl(), "pending", ""));
 		preference.put("auto_return", "approved");
-		preference.put("marketplace_fee", 300); //TODO get it from env
+		preference.put("marketplace_fee", calculateFee(paymentDTO.getPrice(), paymentDTO.getMarketplaceFee()));
 
 		return preference;
 
@@ -102,6 +76,12 @@ public class MercadoPagoPaymentGatewayImpl implements IPaymentGateway {
 		} else {
 			throw new Exception(HttpStatus.INTERNAL_SERVER_ERROR.toString());
 		}
+	}
+	
+	private BigDecimal calculateFee(Double amount, Double marketplaceFee) {
+		BigDecimal price = new BigDecimal(amount);
+		BigDecimal fee = new BigDecimal(marketplaceFee);
+		return price.multiply(fee);
 	}
 
 }

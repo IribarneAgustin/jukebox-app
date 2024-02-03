@@ -1,20 +1,12 @@
 package com.juke.api.service;
 
-import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.FormHttpMessageConverter;
@@ -26,6 +18,7 @@ import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.juke.api.model.Track;
+import com.juke.api.utils.SpotifyUtils;
 
 @Service
 public class SpotifyWebApiService {
@@ -107,7 +100,7 @@ public class SpotifyWebApiService {
 	    headers.set("Authorization", "Bearer " + getOrRefreshAccessToken());
 	    HttpEntity<String> entity = new HttpEntity<>(headers);
 	    
-	    String url = "https://api.spotify.com/v1/search?q=" + trackOrArtistName + "&type=track,artist&sort=popularity";
+	    String url = "https://api.spotify.com/v1/search?q=" + trackOrArtistName + "&type=track,artist&sort=popularity&limit=5";
 
 	    ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
 
@@ -115,36 +108,41 @@ public class SpotifyWebApiService {
 	}
 
 
-	public List<String> getPlaylistIdsForCountry(String country) {
-		
-	    List<String> playlistIds = new ArrayList<>();
-	    RestTemplate restTemplate = new RestTemplate();
+	public List<String> getPlaylistIdsForCountry(String country) throws Exception {
+
+		List<String> playlistIds = new ArrayList<>();
+		RestTemplate restTemplate = new RestTemplate();
 		ObjectMapper objectMapper = new ObjectMapper();
-		
-	    try {
-	        HttpHeaders headers = new HttpHeaders();
-	        headers.set("Authorization", "Bearer " + getOrRefreshAccessToken());
 
-	        HttpEntity<String> entity = new HttpEntity<>(headers);
+		try {
+			HttpHeaders headers = new HttpHeaders();
+			headers.set("Authorization", "Bearer " + getOrRefreshAccessToken());
 
-	        String url = "https://api.spotify.com/v1/browse/featured-playlists?country=" + country  + "&limit=50";
+			HttpEntity<String> entity = new HttpEntity<>(headers);
+			Integer offset = 0;
+			Integer limit = 50;
+			while (offset < SpotifyUtils.PLAYLIST_UPDATE_OFFSET_LIMIT) {
+				String url = "https://api.spotify.com/v1/browse/featured-playlists?country=" + country + "&limit=" + limit + "&offset=" + offset;
 
-	        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+				ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
 
-	        if (response.getStatusCode().is2xxSuccessful()) {
-	            JsonNode jsonNode = objectMapper.readTree(response.getBody());
-	            jsonNode.get("playlists").get("items").forEach(item -> {
-	                String playlistId = item.get("id").asText();
-	                playlistIds.add(playlistId);
-	            });
-	        } else {
-	            System.err.println("Failed to retrieve playlists. Status code: " + response.getStatusCode());
-	        }
-	    } catch (Exception e) {
-	        e.printStackTrace();
-	    }
+				if (response.getStatusCode().is2xxSuccessful()) {
+					JsonNode jsonNode = objectMapper.readTree(response.getBody());
+					jsonNode.get("playlists").get("items").forEach(item -> {
+						String playlistId = item.get("id").asText();
+						playlistIds.add(playlistId);
+					});
+				} else {
+					System.err.println("Failed to retrieve playlists. Status code: " + response.getStatusCode());
+				}
+				offset += limit;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw e;
+		}
 
-	    return playlistIds;
+		return playlistIds;
 	}
 
 
@@ -167,14 +165,23 @@ public class SpotifyWebApiService {
                 JsonNode jsonNode = objectMapper.readTree(response.getBody());
                 jsonNode.get("items").forEach(item -> {
                     JsonNode trackNode = item.get("track");
+                    String artistName = trackNode.get("artists").get(0).get("name").asText();
+                    String trackName = trackNode.get("name").asText();
+
+                    // Replace underscores with spaces in artistName and trackName
+                    artistName = artistName.replace("_", " ");
+                    trackName = trackName.replace("_", " ");
+
                     Track track = new Track(
                             trackNode.get("album").get("images").get(0).get("url").asText(),
-                            trackNode.get("artists").get(0).get("name").asText(),
-                            trackNode.get("name").asText(),
-                            trackNode.get("id").asText()
+                            artistName,
+                            trackName,
+                            trackNode.get("uri").asText(),
+                            artistName + " " + trackName
                     );
                     tracks.add(track);
                 });
+
             } else {
                 System.err.println("Failed to retrieve tracks. Status code: " + response.getStatusCode());
             }

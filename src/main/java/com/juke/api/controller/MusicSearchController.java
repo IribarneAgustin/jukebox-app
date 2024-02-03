@@ -25,7 +25,7 @@ public class MusicSearchController {
 
 	@GetMapping("/track/{name}")
 	public ResponseEntity<String> getTrackInformationByName(@PathVariable(name = "name") String userInput) {
-		return trackService.getTracksByTrackOrArtistNameFromDBAndApiResult(userInput);
+		return trackService.getTracksByUserInput(userInput);
 	}
 
 	@GetMapping("/track/list/queue")

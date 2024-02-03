@@ -32,7 +32,7 @@ public class SpotifyAuthController {
 
     @GetMapping("/callback")
     public RedirectView callback(@RequestParam("code") String code, @RequestParam("state") String state) throws Exception {
-    	RedirectView response = spotifyAuthService.saveAccesTokenAndRefreshToken(code, state);
+    	RedirectView response = spotifyAuthService.saveAccesTokenAndRefreshToken(code);
         return response;
     }
 

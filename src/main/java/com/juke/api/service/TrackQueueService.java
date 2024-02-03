@@ -3,6 +3,8 @@ package com.juke.api.service;
 import java.math.BigDecimal;
 import java.time.LocalTime;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -17,7 +19,7 @@ import com.juke.api.model.TrackPriceConfiguration;
 @Service
 public class TrackQueueService {
 	
-	
+	private static final Logger logger = LoggerFactory.getLogger(TrackQueueService.class);
 	private PaymentContext paymentContext = new PaymentContext();
 		
 	@Autowired
@@ -28,6 +30,9 @@ public class TrackQueueService {
 	
 	@Value("${CLIENT_HOME_URL}")
 	private String CLIENT_HOME_URL;
+	
+	@Value("${MARKETPLACE_FEE}")
+	private Double MARKETPLACE_FEE;
 	
 	@Autowired
 	private SpotifyPlaybackSDK spotifyPlaybackSKDService;
@@ -74,10 +79,10 @@ public class TrackQueueService {
 			AppConfiguration adminConfig = adminConfiguration.findAppConfigurationByActiveTrue();
 
 			if (adminConfig != null && adminConfig.getSpotifyPlaylistId() != null) {
+				//if throws an error will be logged but not throws because is not mandatory
 				spotifyPlaybackSKDService.addTrackToPlaylist(trackURI, spotifyAuthService.getToken(), adminConfig.getSpotifyPlaylistId());
-			} else {
-				throw new Exception("Cannot get spotify playlist Id");
 			}
+			spotifyPlaybackSKDService.enqueueTrack(trackURI,spotifyAuthService.getToken());
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -91,7 +96,7 @@ public class TrackQueueService {
 		paymentDTO.setQuantity(1);
 		paymentDTO.setDescription(trackInfoDTO.getArtistName() + " - " + trackInfoDTO.getTrackName());
 		paymentDTO.setTrackInfoDTO(trackInfoDTO);
-		//paymentDTO.setCurrency(null);TODO get it from config
+		paymentDTO.setMarketplaceFee(MARKETPLACE_FEE);
 		
 		 //FIXME (make it abstract)
 		paymentDTO.setToken(mercadoPagoAuthService.getToken()); 

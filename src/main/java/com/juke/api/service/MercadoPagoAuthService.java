@@ -7,8 +7,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.sql.Timestamp;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.Optional;
 
@@ -33,7 +31,7 @@ import com.juke.api.repository.IAccessTokenResponseRepository;
 import com.juke.api.utils.AdminConfigurationConstants;
 
 @Service
-public class MercadoPagoAuthService { //TODO implements IOAuthHanlder
+public class MercadoPagoAuthService implements IOAuthHandler{
 	
     @Autowired
     private IAccessTokenResponseRepository accessTokenResponseRepository;
@@ -54,6 +52,7 @@ public class MercadoPagoAuthService { //TODO implements IOAuthHanlder
 	private final String CLIENT_URL_ADMIN_PANEL = "http://localhost:3000/admin/dashboard"; //TODO add succesfull message
 	private final String CLIENT_URL_LOGIN_ERROR = "http://localhost:3000/admin/login?error=No se pudo conectar con Mercado Pago";
     
+	@Override
     public RedirectView saveAccesTokenAndRefreshToken(String code) {
     	AccessTokenResponse newTokenResponse;
     	Optional<AccessTokenResponse> storedTokenOptional;
@@ -140,9 +139,13 @@ public class MercadoPagoAuthService { //TODO implements IOAuthHanlder
         long expirationTimeMillis = currentTimeMillis + (5L * 30L * 24L * 60L * 60L * 1000L); // 5 months in milliseconds
         return new Timestamp(expirationTimeMillis);
     }
-    
+    /*
+     * 
+     *This method works when the admin was logged succesfully and generated the first row with valid and refresh token. After that, it will refresh if necessary
+     *
+     */
+    @Override
 	public String getToken() throws Exception {
-		//This method works when the admin was logged succesfully and generated the first row with valid and refresh token. After that, it will refresh if necessary
 		Optional<AccessTokenResponse> optionalToken = accessTokenResponseRepository.findByServiceId(AdminConfigurationConstants.ACCESS_TOKEN_RESPONSE_SERVICE_ID_MERCADO_PAGO);
 		Timestamp currentTimeMillis = new Timestamp(System.currentTimeMillis());
 		String token = null;
@@ -197,7 +200,8 @@ public class MercadoPagoAuthService { //TODO implements IOAuthHanlder
         }
     }
     
-    public String buildAuthorizationUrl() {
+    @Override
+    public String buildAuthorizationUrl(String state) {
         return "https://auth.mercadopago.com.ar/authorization" +
                 "?client_id=" + CLIENT_ID +
                 "&response_type=code" +

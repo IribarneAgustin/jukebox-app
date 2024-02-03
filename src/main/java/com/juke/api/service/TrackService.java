@@ -1,12 +1,7 @@
 package com.juke.api.service;
 
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,68 +26,66 @@ public class TrackService {
 		return trackRepository.save(track);
 	}
 
-	public Track findBySpotifyId(String spotifyId) {
-		return trackRepository.findBySpotifyId(spotifyId);
+	public Track findBySpotifyURI(String spotifyURI) {
+		return trackRepository.findBySpotifyURI(spotifyURI);
 	}
 
 	public List<Track> searchTracksByUserInput(String userInput) {
-		// Replace spaces with underscores in the user input
-		String formattedInput = userInput.replace(" ", "_");
-
-		// Use both query methods to cover cases with spaces or underscores
-		List<Track> tracksWithSpaces = trackRepository
-				.searchTracks(userInput);
-		List<Track> tracksWithUnderscores = trackRepository
-				.searchTracks(formattedInput);
-
-		// Combine the results
-		List<Track> combinedResults = new ArrayList<>(new HashSet<>(
-				Stream.concat(tracksWithSpaces.stream(), tracksWithUnderscores.stream()).collect(Collectors.toList())));
-
-		return combinedResults;
+		return trackRepository.findByDescriptionOrArtistNameOrTrackNameContainingIgnoreCase(userInput);
 	}
 
-	public void storeTracksFromPlaylists() {
-		List<String> playlistIds = spotifyWebApiService.getPlaylistIdsForCountry("AR");
-
-		for (String playlistId : playlistIds) {
-			List<Track> tracks = spotifyWebApiService.getPlaylistTracks(playlistId);
-			storeTrackList(tracks);
+	public ResponseEntity<String> updateTracksTask() {
+		ResponseEntity<String> response = null;
+		try {
+			System.out.println("BEGIN TracksUpdateTask");
+			List<String> playlistIds = spotifyWebApiService.getPlaylistIdsForCountry("AR");
+			System.out.println("Processing " + playlistIds.size() + " playlists");
+			for (String playlistId : playlistIds) {
+				List<Track> tracks = spotifyWebApiService.getPlaylistTracks(playlistId);
+				storeTrackList(tracks);
+			}
+            response = new ResponseEntity<>(HttpStatus.OK);
+			System.out.println("END TracksUpdateTask");
+		} catch (Exception e) {
+            response = new ResponseEntity<>("Error occurred: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+			e.printStackTrace();
 		}
+		return response;
 	}
 
 	private void storeTrackList(List<Track> tracks) {
-		System.out.println(tracks.size());
 		for (Track track : tracks) {
-			if (track.getSpotifyId() != null && !track.getSpotifyId().isEmpty()
-					&& trackRepository.findBySpotifyId(track.getSpotifyId()) == null) {
+			if (track.getSpotifyURI() != null && !track.getSpotifyURI().isEmpty()
+					&& trackRepository.findBySpotifyURI(track.getSpotifyURI()) == null) {
 				trackRepository.save(track);
 			}
 		}
 
 	}
 
-	public ResponseEntity<String> getTracksByTrackOrArtistNameFromDBAndApiResult(String userInput) {
+	public ResponseEntity<String> getTracksByUserInput(String userInput) {
 		ResponseEntity<String> response = null;
-        try {
-            List<Track> tracksFromApi = getTracksFromApiSearch(userInput);
-            tracksFromApi = new ArrayList<>(); 
-            List<Track> tracksFromDB = searchTracksByUserInput(userInput);
-            List<Track> mergedTracks = new ArrayList<>(tracksFromApi); //merge if db result is empty
-            mergedTracks.addAll(tracksFromDB);
+		try {
+			String responseBody = null;
+			List<Track> tracksFromDB = searchTracksByUserInput(userInput);
+			if (tracksFromDB == null || (tracksFromDB != null && (tracksFromDB.isEmpty() || tracksFromDB.size() <= 2))) {
+				List<Track> tracksFromApi = getTracksFromApiSearch(userInput);
+				List<Track> mergedTracks = new ArrayList<>(tracksFromApi);
+				mergedTracks.addAll(tracksFromDB);
+				responseBody = convertTracksToJson(mergedTracks);
+			} else {
+				responseBody = convertTracksToJson(tracksFromDB);
+			}
 
-            String responseBody = convertTracksToJson(mergedTracks);
+			response = new ResponseEntity<>(responseBody, HttpStatus.OK);
 
-            // Return a ResponseEntity with the merged tracks in the response body
-            response = new ResponseEntity<>(responseBody, HttpStatus.OK);
+		} catch (Exception e) {
+			e.printStackTrace();
+			response = new ResponseEntity<>("Error occurred: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+		}
 
-        } catch (Exception e) {
-            e.printStackTrace();
-            response = new ResponseEntity<>("Error occurred: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-        
-        return response;
-    }
+		return response;
+	}
 
 	private List<Track> getTracksFromApiSearch(String searchQuery) throws Exception {
 		List<Track> tracksFromApi = new ArrayList<>();
@@ -129,9 +122,10 @@ public class TrackService {
 		String albumCover = trackNode.path("album").path("images").get(0).path("url").asText();
 		String artistName = trackNode.path("artists").get(0).path("name").asText();
 		String trackName = trackNode.path("name").asText();
-		String spotifyId = trackNode.path("id").asText();
+		String spotifyURI = trackNode.path("uri").asText();
+		String description = trackNode.path("artists").get(0).path("name").asText() + " - " + trackNode.get("name").asText();
 
-		return new Track(albumCover, artistName, trackName, spotifyId);
+		return new Track(albumCover, artistName, trackName, spotifyURI, description);
 	}
 	
     private String convertTracksToJson(List<Track> tracks) throws JsonProcessingException {

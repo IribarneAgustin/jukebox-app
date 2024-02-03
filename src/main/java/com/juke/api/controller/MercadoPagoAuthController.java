@@ -21,7 +21,7 @@ public class MercadoPagoAuthController {
 	 */
     @GetMapping("/login")
     public RedirectView login() throws Exception {
-        String authorizationUrl = mercadoPagoAuthService.buildAuthorizationUrl();
+        String authorizationUrl = mercadoPagoAuthService.buildAuthorizationUrl(null);
         return new RedirectView(authorizationUrl);
     }
 	
