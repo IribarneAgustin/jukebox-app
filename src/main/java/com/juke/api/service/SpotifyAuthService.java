@@ -28,21 +28,18 @@ public class SpotifyAuthService implements IOAuthHandler {
 	
     @Value("${SPOTIFY_PLAYBACK_SDK_CLIENT_ID}")
     private String CLIENT_ID;
+    
     @Value("${SPOTIFY_PLAYBACK_SDK_CLIENT_SECRET}")
     private String CLIENT_SECRET;
-    @Value("${CLIENT_ROOT_URL}")
-    private String CLIENT_ROOT_URL;
-    @Value("${SERVER_ROOT_URL}")
-    private String SERVER_ROOT_URL;
     
     @Autowired
     private IAccessTokenResponseRepository accessTokenResponseRepository;
 
-    //FIXME
-    private final String REDIRECT_URI = "http://localhost:8080/api/spotify/callback";
+    @Value("${SPOTIFY_AUTH_REDIRECT_URL}")
+    private String SPOTIFY_AUTH_REDIRECT_URL;
     
-    private final String CLIENT_URL_ADMIN_PANEL = "http://localhost:3000/admin/dashboard";
-    private final String CLIENT_URL_LOGIN_ERROR = "http://localhost:3000/admin/login?error=No se pudo conectar con Spotify";
+    @Value("${CLIENT_URL_ADMIN_PANEL}")
+    private String CLIENT_URL_ADMIN_PANEL;
 	
 	private AccessTokenResponse requestAccessTokenAndRefreshToken(String authorizationCode) throws IOException {
 		
@@ -52,7 +49,7 @@ public class SpotifyAuthService implements IOAuthHandler {
 
         String requestBody = String.format("code=%s&redirect_uri=%s&grant_type=authorization_code",
                 URLEncoder.encode(authorizationCode, "UTF-8"),
-                URLEncoder.encode(REDIRECT_URI, "UTF-8"));
+                URLEncoder.encode(SPOTIFY_AUTH_REDIRECT_URL, "UTF-8"));
 
         HttpURLConnection connection = (HttpURLConnection) new URL(tokenEndpoint).openConnection();
         connection.setRequestMethod("POST");
@@ -106,7 +103,7 @@ public class SpotifyAuthService implements IOAuthHandler {
         String queryParams = String.format("response_type=code&client_id=%s&scope=%s&redirect_uri=%s&state=%s",
                 URLEncoder.encode(CLIENT_ID, "UTF-8"),
                 URLEncoder.encode(scope, "UTF-8"),
-                URLEncoder.encode(REDIRECT_URI, "UTF-8"),
+                URLEncoder.encode(SPOTIFY_AUTH_REDIRECT_URL, "UTF-8"),
                 URLEncoder.encode(state, "UTF-8"));
 
         return authEndpoint + "?" + queryParams;
@@ -174,7 +171,7 @@ public class SpotifyAuthService implements IOAuthHandler {
 	    	response = new RedirectView(CLIENT_URL_ADMIN_PANEL);
 		} catch (Exception e) {
 			e.printStackTrace();
-			response = new RedirectView(CLIENT_URL_LOGIN_ERROR);
+			response = new RedirectView(CLIENT_URL_ADMIN_PANEL + "?error=No se pudo vincular la cuenta de Spotify\"");
 		}
 		return response;   	 
     }

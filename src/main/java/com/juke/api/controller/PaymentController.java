@@ -3,6 +3,7 @@ package com.juke.api.controller;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.sql.Timestamp;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.view.RedirectView;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.juke.api.dto.TrackInfoDTO;
 import com.juke.api.model.Notification;
 import com.juke.api.service.NotificationService;
@@ -24,7 +26,6 @@ import com.juke.api.service.TransactionService;
 
 @RestController
 @RequestMapping("/api/payment")
-@CrossOrigin(origins = { "http://localhost:3000", "http://localhost:8080", "http://localhost:5173", "*" })
 public class PaymentController {
 
 	@Autowired
@@ -42,11 +43,18 @@ public class PaymentController {
 	@Value("${CLIENT_FAILED_URL}")
 	private String CLIENT_FAILED_URL;
 	
+    @Autowired
+    private ObjectMapper objectMapper;
 
-	@PostMapping("/generatePaymentId")
-	public ResponseEntity<String> generatePaymentId(@RequestBody TrackInfoDTO trackInfoDTO) {
-		return trackQueueService.generatePaymentId(trackInfoDTO, "Mercado Pago");
-	}
+	/**
+	 * THIS ENDPOINT EXPECT THE TRACK INFO AND PAYMENT GATEWAY ID F.E. "Mercado Pago" 
+	 */
+    @PostMapping("/id")
+    public ResponseEntity<String> generatePaymentId(@RequestBody Map<String, Object> requestBody) {
+        TrackInfoDTO trackInfoDTO = objectMapper.convertValue(requestBody.get("trackInfoDTO"), TrackInfoDTO.class);
+        String paymentGateway = (String) requestBody.get("paymentGateway");
+        return trackQueueService.generatePaymentId(trackInfoDTO, paymentGateway);
+    }
 
 	//This method is called by mercado pago redirection when the payment is ok. The params are passed by url in MercadoPagoPaymentGatewayImpl
 	//FIXME If i access directly here? maybe could be saved the order before payment and change status after complete

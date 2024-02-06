@@ -1,5 +1,6 @@
 package com.juke.api.service;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +38,7 @@ public class TrackService {
 	public ResponseEntity<String> updateTracksTask() {
 		ResponseEntity<String> response = null;
 		try {
-			System.out.println("BEGIN TracksUpdateTask");
+			System.out.println("BEGIN TracksUpdateTask " + new Timestamp(System.currentTimeMillis()));
 			List<String> playlistIds = spotifyWebApiService.getPlaylistIdsForCountry("AR");
 			System.out.println("Processing " + playlistIds.size() + " playlists");
 			for (String playlistId : playlistIds) {
@@ -45,7 +46,7 @@ public class TrackService {
 				storeTrackList(tracks);
 			}
             response = new ResponseEntity<>(HttpStatus.OK);
-			System.out.println("END TracksUpdateTask");
+			System.out.println("END TracksUpdateTask " + new Timestamp(System.currentTimeMillis()));
 		} catch (Exception e) {
             response = new ResponseEntity<>("Error occurred: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
 			e.printStackTrace();

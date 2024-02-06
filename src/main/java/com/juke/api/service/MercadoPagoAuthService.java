@@ -38,19 +38,15 @@ public class MercadoPagoAuthService implements IOAuthHandler{
     
 	@Value("${MERCADO_PAGO_CLIENT_ID}")
 	private String CLIENT_ID;
+	
 	@Value("${MERCADO_PAGO_CLIENT_SECRET}")
 	private String CLIENT_SECRET;
-	@Value("${CLIENT_ROOT_URL}")
-	private String CLIENT_ROOT_URL;
-	@Value("${SERVER_ROOT_URL}")
-	private String SERVER_ROOT_URL;
-	
+
     @Value("${MERCADO_PAGO_MARKETPLACE_REDIRECT_URL}")
+
     private String MERCADO_PAGO_MARKETPLACE_REDIRECT_URL;
-
-
-	private final String CLIENT_URL_ADMIN_PANEL = "http://localhost:3000/admin/dashboard"; //TODO add succesfull message
-	private final String CLIENT_URL_LOGIN_ERROR = "http://localhost:3000/admin/login?error=No se pudo conectar con Mercado Pago";
+    @Value("${CLIENT_URL_ADMIN_PANEL}")
+	private String CLIENT_URL_ADMIN_PANEL;
     
 	@Override
     public RedirectView saveAccesTokenAndRefreshToken(String code) {
@@ -70,10 +66,10 @@ public class MercadoPagoAuthService implements IOAuthHandler{
 			} else {
 		    	accessTokenResponseRepository.save(newTokenResponse); //TODO encrypt and decrypt
 			}
-	    	response = new RedirectView(CLIENT_URL_ADMIN_PANEL);
+	    	response = new RedirectView(CLIENT_URL_ADMIN_PANEL + "?message=Cuenta vinculada con Mercado Pago correctamente");
 		} catch (Exception e) {
 			e.printStackTrace();
-			response = new RedirectView(CLIENT_URL_LOGIN_ERROR);
+			response = new RedirectView(CLIENT_URL_ADMIN_PANEL + "?error=No se pudo vincular la cuenta de Mercado Pago");
 		}
 		return response;   	 
     }

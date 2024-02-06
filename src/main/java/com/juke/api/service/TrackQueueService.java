@@ -97,8 +97,6 @@ public class TrackQueueService {
 		paymentDTO.setDescription(trackInfoDTO.getArtistName() + " - " + trackInfoDTO.getTrackName());
 		paymentDTO.setTrackInfoDTO(trackInfoDTO);
 		paymentDTO.setMarketplaceFee(MARKETPLACE_FEE);
-		
-		 //FIXME (make it abstract)
 		paymentDTO.setToken(mercadoPagoAuthService.getToken()); 
 		paymentDTO.setSuccessUrl(MERCADO_PAGO_SUCCESS_URL);
 		paymentDTO.setFailedUrl(CLIENT_HOME_URL);
@@ -108,17 +106,18 @@ public class TrackQueueService {
 	private boolean isAvailableTime(LocalTime fromHour, LocalTime toHour) {
 		Boolean result = false;
 		LocalTime currentTime = LocalTime.now();
-		
+
 		if (fromHour.equals(toHour)) {
-			//Always available
+			// Always available
 			result = true;
-		}
-		if (fromHour.isAfter(toHour)) {
-			// Range crosses midnight
-			result = !currentTime.isBefore(fromHour) || !currentTime.isAfter(toHour);
 		} else {
-			// Normal range without crossing midnight
-			result = !currentTime.isBefore(fromHour) && !currentTime.isAfter(toHour);
+			if (fromHour.isAfter(toHour)) {
+				// Range crosses midnight
+				result = !currentTime.isBefore(fromHour) || !currentTime.isAfter(toHour);
+			} else {
+				// Normal range without crossing midnight
+				result = !currentTime.isBefore(fromHour) && !currentTime.isAfter(toHour);
+			}
 		}
 
 		return result;

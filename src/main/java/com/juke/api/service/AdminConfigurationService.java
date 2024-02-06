@@ -15,6 +15,7 @@ import com.juke.api.model.AdminConfiguration;
 import com.juke.api.model.AppConfiguration;
 import com.juke.api.model.TrackPriceConfiguration;
 import com.juke.api.repository.IAdminConfigurationRepository;
+import com.juke.api.utils.SpotifyUtils;
 
 @Service
 public class AdminConfigurationService {
@@ -86,6 +87,9 @@ public class AdminConfigurationService {
 			if (playlistId == null) {
 				throw new Exception("Playlist ID must not be null");
 			}
+			
+			//exctract it from url
+			playlistId = SpotifyUtils.extractSpotifyId(playlistId);
 
 			AppConfiguration appConfig = adminConfigRepo.findAppConfigurationByActiveTrue();
 			if (appConfig == null) {

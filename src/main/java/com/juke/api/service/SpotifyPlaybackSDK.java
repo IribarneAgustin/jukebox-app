@@ -35,8 +35,10 @@ public class SpotifyPlaybackSDK {
 
 			spotifyApi.setAccessToken(token);
 
-			//TODO: handle exception advising of open the app
 			Device[] devices = spotifyApi.getUsersAvailableDevices().build().execute();
+			if(devices == null || (devices != null && devices.length < 1)) {
+				throw new Exception("Spotify App is not opened");
+			}
 			String deviceId = devices[0].getId();
 
 			JsonArray json = new JsonArray();
@@ -96,8 +98,11 @@ public class SpotifyPlaybackSDK {
 					.setClientSecret(SPOTIFY_PLAYBACK_SDK_CLIENT_SECRET).build();
 			
 			spotifyApi.setAccessToken(token);
-			//TODO valid and sent error message
+
 			Device[] devices = spotifyApi.getUsersAvailableDevices().build().execute();
+			if(devices == null || (devices != null && devices.length < 1)) {
+				throw new Exception("Spotify App is not opened");
+			}
 			String deviceId = devices[0].getId();
         	
             String apiUrl = "https://api.spotify.com/v1/me/player/queue?uri=" + trackUri +
