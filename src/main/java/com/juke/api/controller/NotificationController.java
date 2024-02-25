@@ -3,6 +3,7 @@ package com.juke.api.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,8 +19,8 @@ public class NotificationController {
 	private NotificationService notificationService;
 	
 	@GetMapping("/get")
-	public List<Notification> findFirst5ByOrderByCreationTimestampDesc() {
-		return notificationService.findFirst5ByOrderByCreationTimestampDesc();
+	public ResponseEntity<List<Notification>> findFirst5ByOrderByCreationTimestampDesc() {
+		return notificationService.findFirst5Notifications();
 	}
 
 }

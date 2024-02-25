@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
 import com.juke.api.dto.PaymentDTO;
+import com.juke.api.utils.SystemLogger;
 
 public class MercadoPagoPaymentGatewayImpl implements IPaymentGateway {
 
@@ -24,10 +25,9 @@ public class MercadoPagoPaymentGatewayImpl implements IPaymentGateway {
 		try {
 			Map<String, Object> preference = buildPreference(paymentDTO);
 			String paymentId = getPreferenceId(preference, paymentDTO);
-
 			return paymentId;
-
 		} catch (Exception e) {
+			SystemLogger.error(e.getMessage(), e);
 			throw e;
 		}
 	}

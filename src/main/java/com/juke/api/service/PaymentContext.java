@@ -1,6 +1,7 @@
 package com.juke.api.service;
 
 import com.juke.api.dto.PaymentDTO;
+import com.juke.api.utils.SystemLogger;
 
 public class PaymentContext {
 
@@ -15,14 +16,14 @@ public class PaymentContext {
 		if (paymentGateway == null) {
 			throw new IllegalStateException("Payment gateway not set.");
 		}
-		System.out.println("Starting payment process...");
+		SystemLogger.info("Starting payment process...");
 		try {
 			paymentGateway.process(paymentDTO); // handled in the client
 		} catch (Exception e) {
-			e.printStackTrace();
+			SystemLogger.error(e.getMessage(), e);
 			throw e;
 		}
-		System.out.println("Payment process completed.");
+		SystemLogger.info("Payment process completed.");
 	}
 	
 	public String generatePaymentId(PaymentDTO paymentDTO) throws Exception{
@@ -30,14 +31,14 @@ public class PaymentContext {
 		if (paymentGateway == null) {
 			throw new IllegalStateException("Payment gateway not set.");
 		}
-		System.out.println("Generating payment id");
+		SystemLogger.info("Generating payment id");
 		try {
 			redirectUrl = paymentGateway.generatePaymentId(paymentDTO);
 		} catch (Exception e) {
-			e.printStackTrace();
+			SystemLogger.error(e.getMessage(), e);
 			throw e;
 		}
-		System.out.println("Payment id generated succesfully");
+		SystemLogger.info("Payment id generated succesfully");
 		
 		return redirectUrl;
 	}

@@ -8,7 +8,6 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,6 +22,7 @@ import com.juke.api.model.Notification;
 import com.juke.api.service.NotificationService;
 import com.juke.api.service.TrackQueueService;
 import com.juke.api.service.TransactionService;
+import com.juke.api.utils.SystemLogger;
 
 @RestController
 @RequestMapping("/api/payment")
@@ -74,7 +74,7 @@ public class PaymentController {
 		} catch (Exception e) {
 			String encodedErrorMessage = URLEncoder.encode("El pago se realizó correctamente, pero ocurrió un error al enviar la canción a la cola. Por favor, comuníqueselo al dueño del establecimiento. Número de pago: " + paymentId, "UTF-8");
 	        redirectUrl = CLIENT_FAILED_URL + "?message=" + encodedErrorMessage;
-			e.printStackTrace();
+			SystemLogger.error(e.getMessage(), e);
 		}
 
 		return new RedirectView(redirectUrl);

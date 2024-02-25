@@ -13,6 +13,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import com.juke.api.utils.SystemLogger;
 
 import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.model_objects.miscellaneous.Device;
@@ -47,10 +48,10 @@ public class SpotifyPlaybackSDK {
 			Future<String> playbackFuture = spotifyApi.startResumeUsersPlayback().uris(json).device_id(deviceId).build().executeAsync();
 
 			playbackFuture.get();
-			System.out.println("Playback started!");
+			SystemLogger.info("Playback started!");
 
 		} catch (Exception e) {
-			System.out.println("Error: " + e.getMessage());
+			SystemLogger.error("Error: " + e.getMessage(),e);
 		}
 	}
 	
@@ -82,13 +83,14 @@ public class SpotifyPlaybackSDK {
 
 	        // Check the HTTP status code
 	        if (response.statusCode() == 201) {
-	            System.out.println("Track added to the playlist!");
+	        	SystemLogger.info("Track added to the playlist!");
 	        } else {
-	            System.out.println("Error: " + response.body());
+	        	SystemLogger.info("Error: " + response.body());
 	        }
 
 	    } catch (Exception e) {
-	        System.out.println("Error: " + e.getMessage());
+	    	//We dont throw exception because is not mandatory
+	    	SystemLogger.error("Error: " + e.getMessage(),e);
 	    }
 	}
 	
@@ -118,15 +120,14 @@ public class SpotifyPlaybackSDK {
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() == 204) {
-                System.out.println("Track enqueued!");
+            	SystemLogger.info("Track enqueued!");
             } else {
-                System.out.println("Error: " + response.body());
 	        	throw new Exception("Ocurrió un error al encolar la canción en spotify");
             }
 
         } catch (Exception e) {
-            System.out.println("Error: " + e.getMessage());
-        	throw new Exception("Ocurrió un error al encolar la canción en spotify");
+        	SystemLogger.error("Error: " + e.getMessage(), e);
+        	throw e;
         }
     }
     

@@ -29,7 +29,7 @@ public class MusicSearchController {
 	}
 
 	@GetMapping("/track/list/queue")
-	public List<TrackInfoDTO> getTrackQueue() {
+	public ResponseEntity<List<TrackInfoDTO>> getTrackQueue() {
 		return transactionService.getTrackQueue();
 
 	}

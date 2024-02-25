@@ -16,6 +16,7 @@ import com.juke.api.model.AppConfiguration;
 import com.juke.api.model.TrackPriceConfiguration;
 import com.juke.api.repository.IAdminConfigurationRepository;
 import com.juke.api.utils.SpotifyUtils;
+import com.juke.api.utils.SystemLogger;
 
 @Service
 public class AdminConfigurationService {
@@ -28,12 +29,13 @@ public class AdminConfigurationService {
 	public ResponseEntity<String> setTrackPrice(BigDecimal price) {
 		ResponseEntity<String> response = null;
 		try {
-			
+
 			if (price == null) {
-				throw new Exception("Price must not be null");
+				throw new IllegalArgumentException("Price must not be null");
 			}
+
+			TrackPriceConfiguration trackPriceConfig = adminConfigRepo.findTrackPriceConfigurationByActiveTrue();
 			
-			TrackPriceConfiguration trackPriceConfig = adminConfigRepo.findTrackPriceConfigurationByActiveTrue(); // get by type and must be UNIQUE column
 			if (trackPriceConfig == null) {
 				trackPriceConfig = new TrackPriceConfiguration();
 				trackPriceConfig.setActive(Boolean.TRUE);
@@ -41,9 +43,12 @@ public class AdminConfigurationService {
 			trackPriceConfig.setTrackPrice(price);
 			adminConfigRepo.save(trackPriceConfig);
 			response = new ResponseEntity<String>(HttpStatus.OK);
+		} catch (IllegalArgumentException e) {
+			response = new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+			SystemLogger.error(e.getMessage(), e);
 		} catch (Exception e) {
 			response = new ResponseEntity<String>(HttpStatus.INTERNAL_SERVER_ERROR);
-			e.printStackTrace();
+			SystemLogger.error(e.getMessage(), e);
 		}
 
 		return response;
@@ -63,7 +68,7 @@ public class AdminConfigurationService {
 	            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.singletonMap("error", "Configuration not found"));
 	        }
 	    } catch (Exception e) {
-	        e.printStackTrace();
+			SystemLogger.error(e.getMessage(), e);
 	        return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 	    }
 	}
@@ -87,8 +92,8 @@ public class AdminConfigurationService {
 			if (playlistId == null) {
 				throw new Exception("Playlist ID must not be null");
 			}
-			
-			//exctract it from url
+
+			// exctract it from url
 			playlistId = SpotifyUtils.extractSpotifyId(playlistId);
 
 			AppConfiguration appConfig = adminConfigRepo.findAppConfigurationByActiveTrue();
@@ -99,9 +104,12 @@ public class AdminConfigurationService {
 			appConfig.setSpotifyPlaylistId(playlistId);
 			adminConfigRepo.save(appConfig);
 			response = new ResponseEntity<String>(HttpStatus.OK);
+		} catch (IllegalArgumentException e) {
+			response = new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+			SystemLogger.error(e.getMessage(), e);
 		} catch (Exception e) {
 			response = new ResponseEntity<String>(HttpStatus.INTERNAL_SERVER_ERROR);
-			e.printStackTrace();
+			SystemLogger.error(e.getMessage(), e);
 		}
 
 		return response;
@@ -123,7 +131,7 @@ public class AdminConfigurationService {
 	            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.singletonMap("error", "Configuration not found"));
 	        }
 	    } catch (Exception e) {
-	        e.printStackTrace();
+			SystemLogger.error(e.getMessage(), e);
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.singletonMap("error", "Internal server error"));
 	    }
 	}
@@ -147,7 +155,7 @@ public class AdminConfigurationService {
 			response = new ResponseEntity<String>(HttpStatus.OK);
 		} catch (Exception e) {
 			response = new ResponseEntity<String>(HttpStatus.INTERNAL_SERVER_ERROR);
-			e.printStackTrace();
+			SystemLogger.error(e.getMessage(), e);
 		}
 
 		return response;
@@ -167,10 +175,10 @@ public class AdminConfigurationService {
 
 				response = ResponseEntity.ok().body(hoursMap);
 			} else {
-				throw new Exception("The schedule does not exist");
+				response = new ResponseEntity<>(HttpStatus.NOT_FOUND);
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			SystemLogger.error(e.getMessage(), e);
 			response = new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 		return response;
@@ -189,7 +197,7 @@ public class AdminConfigurationService {
 			response = new ResponseEntity<String>(HttpStatus.OK);
 		} catch (Exception e) {
 			response = new ResponseEntity<String>(HttpStatus.INTERNAL_SERVER_ERROR);
-			e.printStackTrace();
+			SystemLogger.error(e.getMessage(), e);
 		}
 
 		return response;
@@ -209,7 +217,7 @@ public class AdminConfigurationService {
 	            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.singletonMap("error", "Configuration not found"));
 	        }
 	    } catch (Exception e) {
-	        e.printStackTrace();
+			SystemLogger.error(e.getMessage(), e);
 	        return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 	    }
 	}

@@ -3,8 +3,6 @@ package com.juke.api.service;
 import java.math.BigDecimal;
 import java.time.LocalTime;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -15,11 +13,11 @@ import com.juke.api.dto.PaymentDTO;
 import com.juke.api.dto.TrackInfoDTO;
 import com.juke.api.model.AppConfiguration;
 import com.juke.api.model.TrackPriceConfiguration;
+import com.juke.api.utils.SystemLogger;
 
 @Service
 public class TrackQueueService {
 	
-	private static final Logger logger = LoggerFactory.getLogger(TrackQueueService.class);
 	private PaymentContext paymentContext = new PaymentContext();
 		
 	@Autowired
@@ -66,7 +64,7 @@ public class TrackQueueService {
 			}
 		} catch (Exception e) {
 			response = new ResponseEntity<String>(HttpStatus.INTERNAL_SERVER_ERROR);
-			e.printStackTrace();
+			SystemLogger.error(e.getMessage(), e);
 		}
 
 		return response;
@@ -85,7 +83,7 @@ public class TrackQueueService {
 			spotifyPlaybackSKDService.enqueueTrack(trackURI,spotifyAuthService.getToken());
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			SystemLogger.error(e.getMessage(), e);
 			throw e;
 		}
 	}

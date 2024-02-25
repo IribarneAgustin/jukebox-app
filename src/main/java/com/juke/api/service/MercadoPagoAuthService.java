@@ -1,13 +1,7 @@
 package com.juke.api.service;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLEncoder;
 import java.sql.Timestamp;
-import java.util.Base64;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.juke.api.model.AccessTokenResponse;
 import com.juke.api.repository.IAccessTokenResponseRepository;
 import com.juke.api.utils.AdminConfigurationConstants;
+import com.juke.api.utils.SystemLogger;
 
 @Service
 public class MercadoPagoAuthService implements IOAuthHandler{
@@ -47,6 +42,8 @@ public class MercadoPagoAuthService implements IOAuthHandler{
     private String MERCADO_PAGO_MARKETPLACE_REDIRECT_URL;
     @Value("${CLIENT_URL_ADMIN_PANEL}")
 	private String CLIENT_URL_ADMIN_PANEL;
+    
+    private RestTemplate restTemplate = new RestTemplate();
     
 	@Override
     public RedirectView saveAccesTokenAndRefreshToken(String code) {
@@ -68,45 +65,39 @@ public class MercadoPagoAuthService implements IOAuthHandler{
 			}
 	    	response = new RedirectView(CLIENT_URL_ADMIN_PANEL + "?message=Cuenta vinculada con Mercado Pago correctamente");
 		} catch (Exception e) {
-			e.printStackTrace();
+			SystemLogger.error(e.getMessage(), e);
 			response = new RedirectView(CLIENT_URL_ADMIN_PANEL + "?error=No se pudo vincular la cuenta de Mercado Pago");
 		}
 		return response;   	 
     }
     
-    private AccessTokenResponse requestAccessTokenAndRefreshToken(String authorizationCode) throws IOException {
-        String tokenEndpoint = "https://api.mercadopago.com/oauth/token";
-        RestTemplate restTemplate = new RestTemplate();
+	 private AccessTokenResponse requestAccessTokenAndRefreshToken(String authorizationCode) throws IOException {
+	        String tokenEndpoint = "https://api.mercadopago.com/oauth/token";
 
-        String credentials = CLIENT_ID + ":" + CLIENT_SECRET;
-        String encodedCredentials = Base64.getEncoder().encodeToString(credentials.getBytes());
+	        HttpHeaders headers = new HttpHeaders();
+	        headers.setBasicAuth(CLIENT_ID, CLIENT_SECRET);
+	        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "Basic " + encodedCredentials);
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+	        MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
+	        requestBody.add("code", authorizationCode);
+	        requestBody.add("redirect_uri", MERCADO_PAGO_MARKETPLACE_REDIRECT_URL);
+	        requestBody.add("grant_type", "authorization_code");
 
-        MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
-        requestBody.add("code", authorizationCode);
-        requestBody.add("redirect_uri", MERCADO_PAGO_MARKETPLACE_REDIRECT_URL);
-        requestBody.add("grant_type", "authorization_code");
-        requestBody.add("client_secret", CLIENT_SECRET);
-        requestBody.add("client_id", CLIENT_ID);
+	        HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(requestBody, headers);
 
-        HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(requestBody, headers);
+	        ResponseEntity<String> responseEntity = restTemplate.exchange(
+	                tokenEndpoint,
+	                HttpMethod.POST,
+	                requestEntity,
+	                String.class
+	        );
 
-        ResponseEntity<String> responseEntity = restTemplate.exchange(
-                tokenEndpoint,
-                HttpMethod.POST,
-                requestEntity,
-                String.class
-        );
-
-        if (responseEntity.getStatusCode() == HttpStatus.OK) {
-            return extractAccessTokenAndRefreshToken(responseEntity.getBody());
-        } else {
-            throw new IOException("Failed to request access token. Response code: " + responseEntity.getStatusCode());
-        }
-    }
+	        if (responseEntity.getStatusCode() == HttpStatus.OK) {
+	            return extractAccessTokenAndRefreshToken(responseEntity.getBody());
+	        } else {
+	            throw new IOException("Failed to request access token. Response code: " + responseEntity.getStatusCode());
+	        }
+	    }
 
 	
     private AccessTokenResponse extractAccessTokenAndRefreshToken(String responseString) {
@@ -125,7 +116,7 @@ public class MercadoPagoAuthService implements IOAuthHandler{
             expirationTime = calculateExpirationTime();
             
         } catch (Exception e) {
-            e.printStackTrace();
+			SystemLogger.error(e.getMessage(), e);
         }
         return new AccessTokenResponse(accessToken, refreshToken, expirationTime, AdminConfigurationConstants.ACCESS_TOKEN_RESPONSE_SERVICE_ID_MERCADO_PAGO);
     }
@@ -159,7 +150,7 @@ public class MercadoPagoAuthService implements IOAuthHandler{
 				throw new Exception("No se pudo obtener el token de Mercado Pago");
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			SystemLogger.error(e.getMessage(), e);
 			throw new Exception(e);
 		}
 		
@@ -168,31 +159,28 @@ public class MercadoPagoAuthService implements IOAuthHandler{
 	
     private AccessTokenResponse refreshAccessToken(String refreshToken) throws IOException {
         String tokenEndpoint = "https://api.mercadopago.com/oauth/token";
-        String credentials = CLIENT_ID + ":" + CLIENT_SECRET;
-        String encodedCredentials = Base64.getEncoder().encodeToString(credentials.getBytes());
 
-        String requestBody = String.format("grant_type=refresh_token&refresh_token=%s", URLEncoder.encode(refreshToken, "UTF-8"));
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBasicAuth(CLIENT_ID, CLIENT_SECRET);
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-        HttpURLConnection connection = (HttpURLConnection) new URL(tokenEndpoint).openConnection();
-        connection.setRequestMethod("POST");
-        connection.setRequestProperty("Authorization", "Basic " + encodedCredentials);
-        connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-        connection.setDoOutput(true);
+        MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
+        requestBody.add("grant_type", "refresh_token");
+        requestBody.add("refresh_token", refreshToken);
 
-        connection.getOutputStream().write(requestBody.getBytes());
+        HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(requestBody, headers);
 
-        int responseCode = connection.getResponseCode();
-        if (responseCode == HttpURLConnection.HTTP_OK) {
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
-                StringBuilder response = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    response.append(line);
-                }
-                return extractAccessTokenAndRefreshToken(response.toString());
-            }
+        ResponseEntity<String> responseEntity = restTemplate.exchange(
+                tokenEndpoint,
+                HttpMethod.POST,
+                requestEntity,
+                String.class
+        );
+
+        if (responseEntity.getStatusCode() == HttpStatus.OK) {
+            return extractAccessTokenAndRefreshToken(responseEntity.getBody());
         } else {
-            throw new IOException("Failed to refresh access token. Response code: " + responseCode);
+            throw new IOException("Failed to refresh access token. Response code: " + responseEntity.getStatusCode());
         }
     }
     
