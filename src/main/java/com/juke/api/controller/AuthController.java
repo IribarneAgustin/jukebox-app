@@ -14,11 +14,12 @@ import com.juke.api.dto.AuthResponse;
 import com.juke.api.dto.LoginRequest;
 import com.juke.api.dto.RegisterRequest;
 import com.juke.api.service.AuthService;
+import com.juke.api.utils.SystemLogger;
 
 import jakarta.servlet.http.HttpServletResponse;
 
 @RestController
-@RequestMapping("/api/admin")
+@RequestMapping("/api/auth")
 public class AuthController {
 
 	@Autowired
@@ -31,7 +32,7 @@ public class AuthController {
 	        String jwtToken = authResponse.getToken();
 
 	        // Set the cookie with SameSite attribute as "None" for cross-origin requests
-	        String cookieHeader = String.format("jwtToken=%s; SameSite=None; Secure; HttpOnly; Max-Age=%d; Path=/", jwtToken, 180 * 24 * 60 * 60); //6 months
+	        String cookieHeader = String.format("jwtToken=%s; SameSite=None; HttpOnly; Secure; Max-Age=%d; Path=/", jwtToken, 180 * 24 * 60 * 60); //6 months
 
 	        response.setHeader("Access-Control-Allow-Credentials", "true");
 	        response.setHeader("Access-Control-Allow-Origin", "*");
@@ -39,20 +40,20 @@ public class AuthController {
 
 	        return ResponseEntity.ok(authResponse);
 	    } catch (Exception e) {
+			SystemLogger.error(e.getMessage(), e);
 	        return ("Bad credentials").equals(e.getMessage()) ? ResponseEntity.status(HttpStatus.UNAUTHORIZED).build() : ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
 	    }
 	}
 
 
-
-	@PostMapping("/register")
+	@PostMapping("/register") //TODO Create first admin
 	public ResponseEntity<AuthResponse> register(@RequestBody RegisterRequest request) {
 		ResponseEntity<AuthResponse> response = null;
 		try {
 			response = ResponseEntity.ok(authService.register(request));
 		} catch (Exception e) {
 			response = new ResponseEntity<AuthResponse>(HttpStatus.INTERNAL_SERVER_ERROR);
-			e.printStackTrace();
+			SystemLogger.error(e.getMessage(), e);
 		}
 		return response;
 	}
@@ -69,12 +70,12 @@ public class AuthController {
 
             return ResponseEntity.ok("Logged out successfully");
         } catch (Exception e) {
-            e.printStackTrace();
+			SystemLogger.error(e.getMessage(), e);
             return ResponseEntity.status(500).body("Internal Server Error");
         }
     }
 	
-	@GetMapping("/auth/test")
+	@GetMapping("/test")
 	public ResponseEntity<String> test() {
 		return ResponseEntity.ok("test");
 	}

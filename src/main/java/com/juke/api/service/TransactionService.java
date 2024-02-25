@@ -16,6 +16,7 @@ import com.juke.api.dto.TrackInfoDTO;
 import com.juke.api.model.Track;
 import com.juke.api.model.Transaction;
 import com.juke.api.repository.ITransactionRepository;
+import com.juke.api.utils.SystemLogger;
 
 @Service
 public class TransactionService {
@@ -46,9 +47,9 @@ public class TransactionService {
 			transaction.setCreationTimestamp(new Timestamp(System.currentTimeMillis()));
 			transaction.setAmount(new BigDecimal(amount));
 			transactionRepository.save(transaction);
-			System.out.println("Transaction saved succesfully " + new Timestamp(System.currentTimeMillis()).toString());
+			SystemLogger.info("Transaction saved succesfully");
 		} catch (Exception e) {
-			e.printStackTrace();
+			SystemLogger.error(e.getMessage(), e);
 			throw e;
 		}
 	}
@@ -57,29 +58,46 @@ public class TransactionService {
 		return transactionRepository.findFirst10ByOrderByCreationTimestampDesc();
 	}
 
-	public List<TrackInfoDTO> getTrackQueue() {
-		List<Transaction> trxList = findFirst10ByOrderByCreationTimestampDesc();
-		ArrayList<TrackInfoDTO> trackInfoList = new ArrayList<>();
-		if (trxList != null && !trxList.isEmpty()) {
+	public ResponseEntity<List<TrackInfoDTO>> getTrackQueue() {
+	    try {
+	        List<Transaction> trxList = findFirst10ByOrderByCreationTimestampDesc();
+	        ArrayList<TrackInfoDTO> trackInfoList = new ArrayList<>();
 
-			for (Transaction trx : trxList) {
-				TrackInfoDTO trackInfoDTO = new TrackInfoDTO();
-				trackInfoDTO.setAddedAt(trx.getCreationTimestamp());
-				trackInfoDTO.setAlbumCover(trx.getTrack().getAlbumCover());
-				trackInfoDTO.setArtistName(trx.getTrack().getArtistName());
-				trackInfoDTO.setTrackName(trx.getTrack().getTrackName());
+	        if (trxList != null && !trxList.isEmpty()) {
+	            for (Transaction trx : trxList) {
+	                TrackInfoDTO trackInfoDTO = new TrackInfoDTO();
+	                trackInfoDTO.setAddedAt(trx.getCreationTimestamp());
+	                trackInfoDTO.setAlbumCover(trx.getTrack().getAlbumCover());
+	                trackInfoDTO.setArtistName(trx.getTrack().getArtistName());
+	                trackInfoDTO.setTrackName(trx.getTrack().getTrackName());
 
-				trackInfoList.add(trackInfoDTO);
-			}
+	                trackInfoList.add(trackInfoDTO);
+	            }
+	        }
 
-		}
-
-		return trackInfoList;
-
+	        return new ResponseEntity<>(trackInfoList, HttpStatus.OK);
+	    } catch (Exception e) {
+	        SystemLogger.error(e.getMessage(), e);
+	        return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+	    }
 	}
 
 	public List<Transaction> findAllByActiveTrueOrderByCreationTimestampDesc() {
 		return transactionRepository.findAllByActiveTrueOrderByCreationTimestampDesc();
+	}
+	
+	public ResponseEntity<List<Transaction>> findActiveTransactions() {
+	    ResponseEntity<List<Transaction>> responseEntity = null;
+	    try {
+	        List<Transaction> transactionList = findAllByActiveTrueOrderByCreationTimestampDesc();
+	        HttpStatus status = (transactionList != null && !transactionList.isEmpty()) ? HttpStatus.OK : HttpStatus.NOT_FOUND;
+	        responseEntity = new ResponseEntity<>(transactionList, status);
+	    } catch (Exception e) {
+			SystemLogger.error(e.getMessage(), e);
+	        responseEntity = new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+	    }
+
+	    return responseEntity;
 	}
 
 	public ResponseEntity<Map<String, Object>> getTotalAmount() {
@@ -94,7 +112,7 @@ public class TransactionService {
 			response = ResponseEntity.ok(responseBody);
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			SystemLogger.error(e.getMessage(), e);
 			response = new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 
 		}
@@ -110,7 +128,7 @@ public class TransactionService {
 
             return ResponseEntity.ok(responseBody);
         } catch (Exception e) {
-            e.printStackTrace(); // Handle the exception appropriately
+			SystemLogger.error(e.getMessage(), e);
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

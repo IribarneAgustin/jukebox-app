@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.juke.api.model.Track;
 import com.juke.api.utils.SpotifyUtils;
+import com.juke.api.utils.SystemLogger;
 
 @Service
 public class SpotifyWebApiService {
@@ -32,9 +33,9 @@ public class SpotifyWebApiService {
 	public static final String SPOTIFY_WEB_API_TOKEN_ENDPOINT = "https://accounts.spotify.com/api/token";
 	private String accessToken;
 	private Instant tokenExpirationTime;
-	
+	private RestTemplate restTemplate = new RestTemplate();
 
-	private String getAccessToken() {
+	private String getAccessToken() throws Exception {
 		String accessTokenResponse = null;
 		ObjectMapper objectMapper = new ObjectMapper();
 		try {
@@ -48,7 +49,6 @@ public class SpotifyWebApiService {
 
 			HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(parameters, headers);
 
-			RestTemplate restTemplate = new RestTemplate();
 			restTemplate.getMessageConverters().add(new FormHttpMessageConverter());
 
 			ResponseEntity<String> responseEntity = restTemplate.postForEntity(SPOTIFY_WEB_API_TOKEN_ENDPOINT,
@@ -60,14 +60,14 @@ public class SpotifyWebApiService {
 				tokenExpirationTime = Instant.now().plusSeconds(3500);
 			}
 		} catch (Exception e) {
-			// TODO logger
-			e.printStackTrace();
+			SystemLogger.error(e.getMessage(), e);
+			throw e;
 		}
 
 		return accessTokenResponse;
 	}
 
-	private String getOrRefreshAccessToken() {
+	private String getOrRefreshAccessToken() throws Exception {
 		if (accessToken == null || isTokenExpired()) {
 			accessToken = getAccessToken();
 		}
@@ -78,23 +78,8 @@ public class SpotifyWebApiService {
 		return tokenExpirationTime == null ? Boolean.TRUE : Instant.now().isAfter(tokenExpirationTime);
 	}
 
-	public ResponseEntity<String> getArtistInformationByName(String artistName) {
-	    RestTemplate restTemplate = new RestTemplate();
-	    HttpHeaders headers = new HttpHeaders();
-
-	    headers.set("Authorization", "Bearer " + getOrRefreshAccessToken());
-	    HttpEntity<String> entity = new HttpEntity<>(headers);
-	    
-	    String url = "https://api.spotify.com/v1/search?q=" + artistName + "&type=artist&sort=popularity";
-
-	    ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
-
-	    return response;
-	}
-
 	
-	public ResponseEntity<String> getTrackInformationByName(String trackOrArtistName) {
-	    RestTemplate restTemplate = new RestTemplate();
+	public ResponseEntity<String> getTrackInformationByName(String trackOrArtistName) throws Exception {
 	    HttpHeaders headers = new HttpHeaders();
 
 	    headers.set("Authorization", "Bearer " + getOrRefreshAccessToken());
@@ -109,9 +94,7 @@ public class SpotifyWebApiService {
 
 
 	public List<String> getPlaylistIdsForCountry(String country) throws Exception {
-
 		List<String> playlistIds = new ArrayList<>();
-		RestTemplate restTemplate = new RestTemplate();
 		ObjectMapper objectMapper = new ObjectMapper();
 
 		try {
@@ -138,7 +121,7 @@ public class SpotifyWebApiService {
 				offset += limit;
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			SystemLogger.error(e.getMessage(), e);
 			throw e;
 		}
 
@@ -146,51 +129,63 @@ public class SpotifyWebApiService {
 	}
 
 
-    public List<Track> getPlaylistTracks(String playlistId) {
-        List<Track> tracks = new ArrayList<>();
-	    RestTemplate restTemplate = new RestTemplate();
-		ObjectMapper objectMapper = new ObjectMapper();
-		
-        try {
-            HttpHeaders headers = new HttpHeaders();
+	public List<Track> getPlaylistTracks(String playlistId) throws Exception {
+	    List<Track> tracks = new ArrayList<>();
+	    ObjectMapper objectMapper = new ObjectMapper();
+
+	    try {
+	        HttpHeaders headers = new HttpHeaders();
 	        headers.set("Authorization", "Bearer " + getOrRefreshAccessToken());
-	        
-            HttpEntity<String> entity = new HttpEntity<>(headers);
+	        HttpEntity<String> entity = new HttpEntity<>(headers);
+	        String url = "https://api.spotify.com/v1/playlists/" + playlistId + "/tracks";
+	        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
 
-            String url = "https://api.spotify.com/v1/playlists/" + playlistId + "/tracks";
+	        if (response.getStatusCode().is2xxSuccessful()) {
+	            JsonNode jsonNode = objectMapper.readTree(response.getBody());
+	            processJsonNode(jsonNode, tracks);
+	        } else {
+	            SystemLogger.info("Failed to retrieve tracks. Status code: " + response.getStatusCode());
+	        }
+	    } catch (Exception e) {
+	        SystemLogger.error(e.getMessage(), e);
+	        throw e;
+	    }
 
-            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+	    return tracks;
+	}
 
-            if (response.getStatusCode().is2xxSuccessful()) {
-                JsonNode jsonNode = objectMapper.readTree(response.getBody());
-                jsonNode.get("items").forEach(item -> {
-                    JsonNode trackNode = item.get("track");
-                    String artistName = trackNode.get("artists").get(0).get("name").asText();
-                    String trackName = trackNode.get("name").asText();
+	private void processJsonNode(JsonNode jsonNode, List<Track> tracks) {
+	    if (jsonNode != null && jsonNode.has("items")) {
+	        jsonNode.get("items").forEach(item -> {
+	            JsonNode trackNode = item.get("track");
+	            processTrackNode(trackNode, tracks);
+	        });
+	    } else {
+	    	 SystemLogger.info("Invalid JSON structure: Missing 'items' node");
+	    }
+	}
 
-                    // Replace underscores with spaces in artistName and trackName
-                    artistName = artistName.replace("_", " ");
-                    trackName = trackName.replace("_", " ");
+	private void processTrackNode(JsonNode trackNode, List<Track> tracks) {
+	    if (trackNode != null) {
+	        JsonNode albumNode = trackNode.get("album");
 
-                    Track track = new Track(
-                            trackNode.get("album").get("images").get(0).get("url").asText(),
-                            artistName,
-                            trackName,
-                            trackNode.get("uri").asText(),
-                            artistName + " " + trackName
-                    );
-                    tracks.add(track);
-                });
+	        if (albumNode != null && albumNode.has("images") && albumNode.get("images").isArray() && albumNode.get("images").size() > 0) {
+	            String imageUrl = albumNode.get("images").get(0).get("url").asText();
 
-            } else {
-                System.err.println("Failed to retrieve tracks. Status code: " + response.getStatusCode());
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+	            String artistName = trackNode.get("artists").get(0).get("name").asText();
+	            String trackName = trackNode.get("name").asText();
 
-        return tracks;
-    }
+	            Track track = new Track(
+	                    imageUrl,
+	                    artistName,
+	                    trackName,
+	                    trackNode.get("uri").asText(),
+	                    artistName + " " + trackName
+	            );
+	            tracks.add(track);
+	        }
+	    }
+	}
 
 
 

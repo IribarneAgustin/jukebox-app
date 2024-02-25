@@ -1,19 +1,23 @@
 package com.juke.api.service;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.net.URLEncoder;
 import java.sql.Timestamp;
-import java.util.Base64;
 import java.util.Optional;
 import java.util.Random;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.view.RedirectView;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -21,6 +25,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.juke.api.model.AccessTokenResponse;
 import com.juke.api.repository.IAccessTokenResponseRepository;
 import com.juke.api.utils.AdminConfigurationConstants;
+import com.juke.api.utils.SystemLogger;
 
 @Service
 public class SpotifyAuthService implements IOAuthHandler {
@@ -40,39 +45,37 @@ public class SpotifyAuthService implements IOAuthHandler {
     
     @Value("${CLIENT_URL_ADMIN_PANEL}")
     private String CLIENT_URL_ADMIN_PANEL;
+    
+    private RestTemplate restTemplate = new RestTemplate();
 	
-	private AccessTokenResponse requestAccessTokenAndRefreshToken(String authorizationCode) throws IOException {
-		
+    private AccessTokenResponse requestAccessTokenAndRefreshToken(String authorizationCode) throws IOException {
         String tokenEndpoint = "https://accounts.spotify.com/api/token";
-        String credentials = CLIENT_ID + ":" + CLIENT_SECRET;
-        String encodedCredentials = Base64.getEncoder().encodeToString(credentials.getBytes());
 
-        String requestBody = String.format("code=%s&redirect_uri=%s&grant_type=authorization_code",
-                URLEncoder.encode(authorizationCode, "UTF-8"),
-                URLEncoder.encode(SPOTIFY_AUTH_REDIRECT_URL, "UTF-8"));
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBasicAuth(CLIENT_ID, CLIENT_SECRET);
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-        HttpURLConnection connection = (HttpURLConnection) new URL(tokenEndpoint).openConnection();
-        connection.setRequestMethod("POST");
-        connection.setRequestProperty("Authorization", "Basic " + encodedCredentials);
-        connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-        connection.setDoOutput(true);
+        MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
+        requestBody.add("code", authorizationCode);
+        requestBody.add("redirect_uri", SPOTIFY_AUTH_REDIRECT_URL);
+        requestBody.add("grant_type", "authorization_code");
 
-        connection.getOutputStream().write(requestBody.getBytes());
+        HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(requestBody, headers);
 
-        int responseCode = connection.getResponseCode();
-        if (responseCode == HttpURLConnection.HTTP_OK) {
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
-                StringBuilder response = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    response.append(line);
-                }
-                return extractAccessTokenAndRefreshToken(response.toString());
-            }
+        ResponseEntity<String> responseEntity = restTemplate.exchange(
+                tokenEndpoint,
+                HttpMethod.POST,
+                requestEntity,
+                String.class
+        );
+
+        if (responseEntity.getStatusCode() == HttpStatus.OK) {
+            return extractAccessTokenAndRefreshToken(responseEntity.getBody());
         } else {
-            throw new IOException("Failed to request access token. Response code: " + responseCode);
+            throw new IOException("Failed to request access token. Response code: " + responseEntity.getStatusCode());
         }
     }
+
 	
     private AccessTokenResponse extractAccessTokenAndRefreshToken(String responseString) {
     	String accessToken = null;
@@ -90,7 +93,7 @@ public class SpotifyAuthService implements IOAuthHandler {
             expirationTime = calculateExpirationTime();
             
         } catch (Exception e) {
-            e.printStackTrace();
+			SystemLogger.error(e.getMessage(), e);
         }
         return new AccessTokenResponse(accessToken, refreshToken, expirationTime, AdminConfigurationConstants.ACCESS_TOKEN_RESPONSE_SERVICE_ID_SPOTIFY_SDK);
     }
@@ -121,31 +124,28 @@ public class SpotifyAuthService implements IOAuthHandler {
     
     private AccessTokenResponse refreshAccessToken(String refreshToken) throws IOException {
         String tokenEndpoint = "https://accounts.spotify.com/api/token";
-        String credentials = CLIENT_ID + ":" + CLIENT_SECRET;
-        String encodedCredentials = Base64.getEncoder().encodeToString(credentials.getBytes());
 
-        String requestBody = String.format("grant_type=refresh_token&refresh_token=%s", URLEncoder.encode(refreshToken, "UTF-8"));
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBasicAuth(CLIENT_ID, CLIENT_SECRET);
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-        HttpURLConnection connection = (HttpURLConnection) new URL(tokenEndpoint).openConnection();
-        connection.setRequestMethod("POST");
-        connection.setRequestProperty("Authorization", "Basic " + encodedCredentials);
-        connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-        connection.setDoOutput(true);
+        MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
+        requestBody.add("grant_type", "refresh_token");
+        requestBody.add("refresh_token", URLEncoder.encode(refreshToken, "UTF-8"));
 
-        connection.getOutputStream().write(requestBody.getBytes());
+        HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(requestBody, headers);
 
-        int responseCode = connection.getResponseCode();
-        if (responseCode == HttpURLConnection.HTTP_OK) {
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
-                StringBuilder response = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    response.append(line);
-                }
-                return extractAccessTokenAndRefreshToken(response.toString());
-            }
+        ResponseEntity<String> responseEntity = restTemplate.exchange(
+                tokenEndpoint,
+                HttpMethod.POST,
+                requestEntity,
+                String.class
+        );
+
+        if (responseEntity.getStatusCode() == HttpStatus.OK) {
+            return extractAccessTokenAndRefreshToken(responseEntity.getBody());
         } else {
-            throw new IOException("Failed to refresh access token. Response code: " + responseCode);
+            throw new IOException("Failed to refresh access token. Response code: " + responseEntity.getStatusCode());
         }
     }
     
@@ -170,7 +170,7 @@ public class SpotifyAuthService implements IOAuthHandler {
 			}
 	    	response = new RedirectView(CLIENT_URL_ADMIN_PANEL);
 		} catch (Exception e) {
-			e.printStackTrace();
+			SystemLogger.error(e.getMessage(), e);
 			response = new RedirectView(CLIENT_URL_ADMIN_PANEL + "?error=No se pudo vincular la cuenta de Spotify\"");
 		}
 		return response;   	 
@@ -205,7 +205,7 @@ public class SpotifyAuthService implements IOAuthHandler {
 				throw new Exception("No se pudo obtener el token de Spotify");
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			SystemLogger.error(e.getMessage(), e);
 			throw new Exception(e);
 		}
 		

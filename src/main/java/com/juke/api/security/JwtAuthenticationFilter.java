@@ -14,6 +14,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.juke.api.utils.AuthUtils;
+import com.juke.api.utils.SystemLogger;
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -37,12 +40,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 		String token = getTokenFromRequest(request);
 
-		if (token == null && request.getRequestURI() != null && !"/api/admin/login".equals(request.getRequestURI()) 
-				&& !request.getRequestURI().startsWith("/ws") 
-				&& !request.getRequestURI().startsWith("/api/mp/auth/callback") 
-				&& !request.getRequestURI().startsWith("/api/spotify/track/list/queue") 
-				&& !request.getRequestURI().startsWith("/api/spotify/track") 
-				&& !request.getRequestURI().startsWith("/api/payment")) {
+		if (token == null && request.getRequestURI() != null && !AuthUtils.isAllowedUrl(request.getRequestURI())) {
 			token = getTokenFromCookies(request);
 			if (token == null) {
 				response.setStatus(HttpStatus.UNAUTHORIZED.value());
@@ -65,8 +63,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 						SecurityContextHolder.getContext().setAuthentication(authToken);
 					}
 				}
+			} catch (RuntimeException re) {
+				response.setStatus(HttpStatus.UNAUTHORIZED.value());
+				SystemLogger.info("Error 401 Unauthorized");
 			} catch (Exception e) {
-				e.printStackTrace();
+				SystemLogger.error(e.getMessage(), e);
 				response.setStatus(HttpStatus.UNAUTHORIZED.value());
 			}
 		}

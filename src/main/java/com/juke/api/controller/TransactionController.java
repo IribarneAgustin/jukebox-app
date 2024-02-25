@@ -22,8 +22,8 @@ public class TransactionController {
 	
 	
 	@GetMapping("/get")
-	public List<Transaction> findAllByActiveTrueOrderByCreationTimestampDesc() {
-		return transactionService.findAllByActiveTrueOrderByCreationTimestampDesc();		
+	public ResponseEntity<List<Transaction>> findAllByActiveTrueOrderByCreationTimestampDesc() {
+		return transactionService.findActiveTransactions();		
 	}
 	
 	@GetMapping("/get/total")
