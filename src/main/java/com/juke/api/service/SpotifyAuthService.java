@@ -102,14 +102,15 @@ public class SpotifyAuthService implements IOAuthHandler {
     public String buildAuthorizationUrl(String state) throws IOException {
         String scope = "user-read-playback-state user-modify-playback-state playlist-modify-public playlist-modify-private";
 
-        String authEndpoint = "https://accounts.spotify.com/authorize";
+        //String authEndpoint = "https://accounts.spotify.com/authorize";
         String queryParams = String.format("response_type=code&client_id=%s&scope=%s&redirect_uri=%s&state=%s",
                 URLEncoder.encode(CLIENT_ID, "UTF-8"),
                 URLEncoder.encode(scope, "UTF-8"),
                 URLEncoder.encode(SPOTIFY_AUTH_REDIRECT_URL, "UTF-8"),
                 URLEncoder.encode(state, "UTF-8"));
 
-        return authEndpoint + "?" + queryParams;
+        //We return queryParams to avoid problems with redirections server-client 
+        return "?" + queryParams;
     }
 
     public String generateRandomString(int length) {

@@ -12,8 +12,8 @@
 	<groupId>com.juke</groupId>
 	<artifactId>api</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>api</name>
-	<description>API REST for Juke Box app</description>
+	<name>jboxapp</name>
+	<description>API REST for JBox App</description>
 	<properties>
 		<java.version>17</java.version>
 	</properties>
@@ -46,7 +46,7 @@
 		</dependency>
 		<!-- <dependency> <groupId>com.mysql</groupId> <artifactId>mysql-connector-j</artifactId> 
 			<scope>runtime</scope> </dependency> -->
-		<dependency>
+		 <dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
 		</dependency>

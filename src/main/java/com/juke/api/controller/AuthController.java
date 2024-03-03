@@ -1,6 +1,7 @@
 package com.juke.api.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
@@ -24,6 +25,10 @@ public class AuthController {
 
 	@Autowired
 	private AuthService authService;
+	
+    @Value("${ALLOWED_ORIGINS}")
+    String allowedOrigin;
+
 
 	@PostMapping("/login")
 	public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request, HttpServletResponse response) {
@@ -31,11 +36,10 @@ public class AuthController {
 	        AuthResponse authResponse = authService.login(request);
 	        String jwtToken = authResponse.getToken();
 
-	        // Set the cookie with SameSite attribute as "None" for cross-origin requests
 	        String cookieHeader = String.format("jwtToken=%s; SameSite=None; HttpOnly; Secure; Max-Age=%d; Path=/", jwtToken, 180 * 24 * 60 * 60); //6 months
 
 	        response.setHeader("Access-Control-Allow-Credentials", "true");
-	        response.setHeader("Access-Control-Allow-Origin", "*");
+	        response.setHeader("Access-Control-Allow-Origin", allowedOrigin);
 	        response.setHeader("Set-Cookie", cookieHeader);
 
 	        return ResponseEntity.ok(authResponse);
@@ -46,7 +50,7 @@ public class AuthController {
 	}
 
 
-	@PostMapping("/register") //TODO Create first admin
+	@PostMapping("/register")
 	public ResponseEntity<AuthResponse> register(@RequestBody RegisterRequest request) {
 		ResponseEntity<AuthResponse> response = null;
 		try {

@@ -42,6 +42,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 		if (token == null && request.getRequestURI() != null && !AuthUtils.isAllowedUrl(request.getRequestURI())) {
 			token = getTokenFromCookies(request);
+			SystemLogger.info("token from cookies: " + token);
 			if (token == null) {
 				response.setStatus(HttpStatus.UNAUTHORIZED.value());
 			}
@@ -65,7 +66,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 				}
 			} catch (RuntimeException re) {
 				response.setStatus(HttpStatus.UNAUTHORIZED.value());
-				SystemLogger.info("Error 401 Unauthorized");
+				SystemLogger.error("Error 401 Unauthorized", re);
 			} catch (Exception e) {
 				SystemLogger.error(e.getMessage(), e);
 				response.setStatus(HttpStatus.UNAUTHORIZED.value());

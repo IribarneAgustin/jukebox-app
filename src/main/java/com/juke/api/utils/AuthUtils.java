@@ -12,7 +12,8 @@ public class AuthUtils {
             "/api/mp/auth/callback",
             "/api/spotify/track/list/queue",
             "/api/spotify/track",
-            "/api/payment"
+            "/api/payment",
+            "/api/spotify/callback"
     );
 	
 	public static String generateRandomString(int length) {
