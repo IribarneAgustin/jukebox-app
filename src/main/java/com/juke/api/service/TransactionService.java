@@ -90,7 +90,7 @@ public class TransactionService {
 	    ResponseEntity<List<Transaction>> responseEntity = null;
 	    try {
 	        List<Transaction> transactionList = findAllByActiveTrueOrderByCreationTimestampDesc();
-	        HttpStatus status = (transactionList != null && !transactionList.isEmpty()) ? HttpStatus.OK : HttpStatus.NOT_FOUND;
+	        HttpStatus status = transactionList != null ? HttpStatus.OK : HttpStatus.NOT_FOUND;
 	        responseEntity = new ResponseEntity<>(transactionList, status);
 	    } catch (Exception e) {
 			SystemLogger.error(e.getMessage(), e);

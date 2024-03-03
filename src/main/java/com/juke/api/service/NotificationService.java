@@ -46,7 +46,7 @@ public class NotificationService {
 
 	    try {
 	        List<Notification> notificationList = findFirst5ByOrderByCreationTimestampDesc();
-	        HttpStatus status = (notificationList != null && !notificationList.isEmpty()) ? HttpStatus.OK : HttpStatus.NOT_FOUND;
+	        HttpStatus status = notificationList != null ? HttpStatus.OK : HttpStatus.NOT_FOUND;
 	        responseEntity = new ResponseEntity<>(notificationList, status);
 	    } catch (Exception e) {
 	        SystemLogger.error(e.getMessage(), e);

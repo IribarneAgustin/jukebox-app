@@ -1,6 +1,8 @@
 package com.juke.api.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -22,10 +24,10 @@ public class SpotifyAuthController {
     /*This method will redirect the user to spotify login if necessary */
     //Dispatched by the client redirection after login successfully completed
     @GetMapping("/login")
-    public RedirectView login() throws Exception {
+    public ResponseEntity<String> login() throws Exception {
         String state = AuthUtils.generateRandomString(16);
         String authorizationUrl = spotifyAuthService.buildAuthorizationUrl(state);
-        return new RedirectView(authorizationUrl);
+		return ResponseEntity.ok(authorizationUrl);
     }
 
     @GetMapping("/callback")
