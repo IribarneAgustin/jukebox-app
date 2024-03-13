@@ -16,6 +16,7 @@ public interface ITrackRepository extends JpaRepository<Track,Long>{
 	
 	public List<Track> findByArtistNameContainingIgnoreCaseOrTrackNameContainingIgnoreCase(String artistName, String trackName);
 	
+	//FIX ME: DUPLICATED VALUES
 	@Query("SELECT t FROM Track t " +
 		       "WHERE LOWER(t.description) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
 		       "LOWER(t.artistName) LIKE LOWER(:searchTerm) OR " +
@@ -26,7 +27,8 @@ public interface ITrackRepository extends JpaRepository<Track,Long>{
 		       "  ELSE 1 " +
 		       "END, t.artistName " + 
 		       "LIMIT 5")
-	public List<Track> findByDescriptionOrArtistNameOrTrackNameContainingIgnoreCase(@Param("searchTerm") String searchTerm);
+		public List<Track> findByDescriptionOrArtistNameOrTrackNameContainingIgnoreCase(@Param("searchTerm") String searchTerm);
+
 
 
 

@@ -42,7 +42,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 		if (token == null && request.getRequestURI() != null && !AuthUtils.isAllowedUrl(request.getRequestURI())) {
 			token = getTokenFromCookies(request);
-			SystemLogger.info("token from cookies: " + token);
 			if (token == null) {
 				response.setStatus(HttpStatus.UNAUTHORIZED.value());
 			}

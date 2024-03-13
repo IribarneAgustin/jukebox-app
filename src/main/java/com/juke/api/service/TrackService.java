@@ -1,7 +1,9 @@
 package com.juke.api.service;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
@@ -26,12 +28,11 @@ public class TrackService {
 
 	@Autowired
 	private SpotifyWebApiService spotifyWebApiService;
-	
-	//FOR DEBUG
-    /*@PostConstruct
-    public void initialize() {
-    	updateTracksTaskScheduled();
-    }*/
+
+	// FOR DEBUG
+	/*
+	 * @PostConstruct public void initialize() { updateTracksTaskScheduled(); }
+	 */
 
 	public Track save(Track track) {
 		return trackRepository.save(track);
@@ -46,7 +47,7 @@ public class TrackService {
 	}
 
 	/*
-	 * Run monthly on the first day at 2:00 AM 
+	 * Run monthly on the first day at 2:00 AM
 	 */
 	@Scheduled(cron = "0 0 2 1 * ?")
 	public void updateTracksTaskScheduled() {
@@ -63,7 +64,6 @@ public class TrackService {
 			SystemLogger.error(e.getMessage(), e);
 		}
 	}
-	
 
 	private void storeTrackList(List<Track> tracks) {
 		for (Track track : tracks) {
@@ -80,14 +80,14 @@ public class TrackService {
 		try {
 			String responseBody = null;
 			List<Track> tracksFromDB = getTracksFromDBWithUnderscoresOrBlankSpaces(userInput);
-	        
+
 			if (tracksFromDB == null || (tracksFromDB != null && (tracksFromDB.isEmpty() || tracksFromDB.size() <= 2))) {
 				List<Track> tracksFromApi = getTracksFromApiSearch(userInput);
 				List<Track> mergedTracks = new ArrayList<>(tracksFromApi);
 				mergedTracks.addAll(tracksFromDB);
-				responseBody = convertTracksToJson(mergedTracks);
+				responseBody = convertTracksToJson(filterDuplicatesBySpotifyURI(mergedTracks));
 			} else {
-				responseBody = convertTracksToJson(tracksFromDB);
+				responseBody = convertTracksToJson(filterDuplicatesBySpotifyURI(tracksFromDB));
 			}
 
 			response = new ResponseEntity<>(responseBody, HttpStatus.OK);
@@ -99,14 +99,19 @@ public class TrackService {
 
 		return response;
 	}
-	
+
 	private List<Track> getTracksFromDBWithUnderscoresOrBlankSpaces(String userInput) {
 		List<Track> tracksFromDBOriginal = searchTracksByUserInput(userInput);
 		String userInputWithoutSpaces = userInput.replace(" ", "_");
 		List<Track> tracksFromDBWithUnderscores = searchTracksByUserInput(userInputWithoutSpaces);
 		List<Track> tracksFromDB = new ArrayList<>(tracksFromDBOriginal);
 		tracksFromDB.addAll(tracksFromDBWithUnderscores);
-		return tracksFromDB;
+		return filterDuplicatesBySpotifyURI(tracksFromDB);
+	}
+
+	private List<Track> filterDuplicatesBySpotifyURI(List<Track> tracks) {
+		LinkedHashSet<String> spotifyURISet = new LinkedHashSet<>();
+		return tracks.stream().filter(track -> spotifyURISet.add(track.getSpotifyURI())).collect(Collectors.toList());
 	}
 
 	private List<Track> getTracksFromApiSearch(String searchQuery) throws Exception {
@@ -145,22 +150,22 @@ public class TrackService {
 		String artistName = trackNode.path("artists").get(0).path("name").asText();
 		String trackName = trackNode.path("name").asText();
 		String spotifyURI = trackNode.path("uri").asText();
-		String description = trackNode.path("artists").get(0).path("name").asText() + " - " + trackNode.get("name").asText();
+		String description = trackNode.path("artists").get(0).path("name").asText() + " - "
+				+ trackNode.get("name").asText();
 
 		return new Track(albumCover, artistName, trackName, spotifyURI, description);
 	}
-	
-    private String convertTracksToJson(List<Track> tracks) throws JsonProcessingException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        String response = "";
-        try {
-            response = objectMapper.writeValueAsString(tracks);
-        } catch (JsonProcessingException e) {
-			SystemLogger.error(e.getMessage(), e);
-            throw e;
-        }
-        return response;
-    }
 
+	private String convertTracksToJson(List<Track> tracks) throws JsonProcessingException {
+		ObjectMapper objectMapper = new ObjectMapper();
+		String response = "";
+		try {
+			response = objectMapper.writeValueAsString(tracks);
+		} catch (JsonProcessingException e) {
+			SystemLogger.error(e.getMessage(), e);
+			throw e;
+		}
+		return response;
+	}
 
 }

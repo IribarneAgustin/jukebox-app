@@ -1,7 +1,10 @@
 package com.juke.api.service;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.sql.Timestamp;
+import java.util.Base64;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,8 +41,8 @@ public class MercadoPagoAuthService implements IOAuthHandler{
 	private String CLIENT_SECRET;
 
     @Value("${MERCADO_PAGO_MARKETPLACE_REDIRECT_URL}")
-
     private String MERCADO_PAGO_MARKETPLACE_REDIRECT_URL;
+    
     @Value("${CLIENT_URL_ADMIN_PANEL}")
 	private String CLIENT_URL_ADMIN_PANEL;
     
@@ -70,34 +73,40 @@ public class MercadoPagoAuthService implements IOAuthHandler{
 		}
 		return response;   	 
     }
-    
-	 private AccessTokenResponse requestAccessTokenAndRefreshToken(String authorizationCode) throws IOException {
-	        String tokenEndpoint = "https://api.mercadopago.com/oauth/token";
 
-	        HttpHeaders headers = new HttpHeaders();
-	        headers.setBasicAuth(CLIENT_ID, CLIENT_SECRET);
-	        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+	private AccessTokenResponse requestAccessTokenAndRefreshToken(String authorizationCode) throws IOException {
+        String tokenEndpoint = "https://api.mercadopago.com/oauth/token";
+        RestTemplate restTemplate = new RestTemplate();
 
-	        MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
-	        requestBody.add("code", authorizationCode);
-	        requestBody.add("redirect_uri", MERCADO_PAGO_MARKETPLACE_REDIRECT_URL);
-	        requestBody.add("grant_type", "authorization_code");
+        String credentials = CLIENT_ID + ":" + CLIENT_SECRET;
+        String encodedCredentials = Base64.getEncoder().encodeToString(credentials.getBytes());
 
-	        HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(requestBody, headers);
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Basic " + encodedCredentials);
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-	        ResponseEntity<String> responseEntity = restTemplate.exchange(
-	                tokenEndpoint,
-	                HttpMethod.POST,
-	                requestEntity,
-	                String.class
-	        );
+        MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
+        requestBody.add("code", authorizationCode);
+        requestBody.add("redirect_uri", MERCADO_PAGO_MARKETPLACE_REDIRECT_URL);
+        requestBody.add("grant_type", "authorization_code");
+        requestBody.add("client_secret", CLIENT_SECRET);
+        requestBody.add("client_id", CLIENT_ID);
 
-	        if (responseEntity.getStatusCode() == HttpStatus.OK) {
-	            return extractAccessTokenAndRefreshToken(responseEntity.getBody());
-	        } else {
-	            throw new IOException("Failed to request access token. Response code: " + responseEntity.getStatusCode());
-	        }
-	    }
+        HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(requestBody, headers);
+
+        ResponseEntity<String> responseEntity = restTemplate.exchange(
+                tokenEndpoint,
+                HttpMethod.POST,
+                requestEntity,
+                String.class
+        );
+
+        if (responseEntity.getStatusCode() == HttpStatus.OK) {
+            return extractAccessTokenAndRefreshToken(responseEntity.getBody());
+        } else {
+            throw new IOException("Failed to request access token. Response code: " + responseEntity.getStatusCode());
+        }
+    }
 
 	
     private AccessTokenResponse extractAccessTokenAndRefreshToken(String responseString) {
@@ -185,12 +194,16 @@ public class MercadoPagoAuthService implements IOAuthHandler{
     }
     
     @Override
-    public String buildAuthorizationUrl(String state) {
-        return "https://auth.mercadopago.com.ar/authorization" +
-                "?client_id=" + CLIENT_ID +
-                "&response_type=code" +
-                "&platform_id=mp" +
-                "&redirect_uri=" + MERCADO_PAGO_MARKETPLACE_REDIRECT_URL;
-    }
+	public String buildAuthorizationUrl(String state) {
+		String response = null;
+		try {
+		response = String.format("?client_id=%s&response_type=code&platform_id=mp&redirect_uri=%s", 
+				URLEncoder.encode(CLIENT_ID, "UTF-8"),
+				URLEncoder.encode(MERCADO_PAGO_MARKETPLACE_REDIRECT_URL,"UTF-8"));
+		} catch (UnsupportedEncodingException e) {
+			SystemLogger.error(e.getMessage(), e);
+		}
+		return response;
+	}
 
 }
