@@ -105,7 +105,7 @@ public class SpotifyPlaybackSDK {
 			if(devices == null || (devices != null && devices.length < 1)) {
 				throw new Exception("Spotify App is not opened");
 			}
-			String deviceId = devices[0].getId();
+			String deviceId = devices[0].getId(); //TODO ENSURE DEVICE
         	
             String apiUrl = "https://api.spotify.com/v1/me/player/queue?uri=" + trackUri +
                             "&device_id=" + deviceId;

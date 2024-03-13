@@ -1,6 +1,7 @@
 package com.juke.api.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -20,9 +21,9 @@ public class MercadoPagoAuthController {
 	 * SHOULD RUN THIS ENDPOINT FROM SELLER ACOUNT TO LINKED IT WITH MARKETPLACE AND GET TOKEN 
 	 */
     @GetMapping("/login")
-    public RedirectView login() throws Exception {
+    public ResponseEntity<String> login() throws Exception {
         String authorizationUrl = mercadoPagoAuthService.buildAuthorizationUrl(null);
-        return new RedirectView(authorizationUrl);
+        return ResponseEntity.ok(authorizationUrl);
     }
 	
 	/*
