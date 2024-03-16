@@ -15,6 +15,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.juke.api.utils.SystemLogger;
 
+import io.jsonwebtoken.lang.Arrays;
 import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.model_objects.miscellaneous.Device;
 
@@ -40,8 +41,8 @@ public class SpotifyPlaybackSDK {
 			if(devices == null || (devices != null && devices.length < 1)) {
 				throw new Exception("Spotify App is not opened");
 			}
-			String deviceId = devices[0].getId();
-
+			String deviceId = getDeviceId(devices);
+			
 			JsonArray json = new JsonArray();
 			json.add(trackUri);
 
@@ -105,7 +106,8 @@ public class SpotifyPlaybackSDK {
 			if(devices == null || (devices != null && devices.length < 1)) {
 				throw new Exception("Spotify App is not opened");
 			}
-			String deviceId = devices[0].getId(); //TODO ENSURE DEVICE
+			
+			String deviceId = getDeviceId(devices);
         	
             String apiUrl = "https://api.spotify.com/v1/me/player/queue?uri=" + trackUri +
                             "&device_id=" + deviceId;
@@ -130,5 +132,26 @@ public class SpotifyPlaybackSDK {
         	throw e;
         }
     }
+    
+    /*
+     * Spotify allows only one device playing.
+     * Match by Active, if none is active, is the same because no playing will be interrupted.
+     */
+	private String getDeviceId(Device[] devices) {
+		String deviceId = null;
+		if (devices.length > 1) {
+			for (Device device : devices) {
+				if (device.getIs_active()) {
+					deviceId = device.getId();
+				}
+			}
+		}
+		// None active OR only one available
+		if (deviceId == null) {
+			deviceId = devices[0].getId();
+		}
+
+		return deviceId;
+	}
     
 }
