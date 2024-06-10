@@ -169,7 +169,7 @@ public class SpotifyAuthService implements IOAuthHandler {
 			} else {
 		    	accessTokenResponseRepository.save(newTokenResponse); //TODO encrypt and decrypt
 			}
-	    	response = new RedirectView(CLIENT_URL_ADMIN_PANEL);
+	    	response = new RedirectView(CLIENT_URL_ADMIN_PANEL + "?message=Cuenta vinculada con Spotify correctamente");
 		} catch (Exception e) {
 			SystemLogger.error(e.getMessage(), e);
 			response = new RedirectView(CLIENT_URL_ADMIN_PANEL + "?error=No se pudo vincular la cuenta de Spotify\"");

@@ -30,8 +30,8 @@ public class TrackService {
 	private SpotifyWebApiService spotifyWebApiService;
 
 	// FOR DEBUG
-	/*
-	 * @PostConstruct public void initialize() { updateTracksTaskScheduled(); }
+	/*@PostConstruct 
+	public void initialize() { updateTracksTaskScheduled(); }
 	 */
 
 	public Track save(Track track) {

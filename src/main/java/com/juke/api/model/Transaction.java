@@ -7,6 +7,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 @Entity
@@ -22,17 +23,14 @@ public class Transaction extends PersistentObject {
 	@ManyToOne
 	@JoinColumn(name = "track_id")
 	private Track track;
+	
+	@OneToOne
+	@JoinColumn(name = "order_id", referencedColumnName = "id")
+	private TrackOrder trackOrder;
+	
 
 	public Transaction() {
 		super();
-	}
-
-	public Transaction(Timestamp creationTimestamp, BigDecimal amount, String paymentId, Track track) {
-		super();
-		this.creationTimestamp = creationTimestamp;
-		this.amount = amount;
-		this.paymentId = paymentId;
-		this.track = track;
 	}
 
 	public Track getTrack() {
@@ -66,5 +64,15 @@ public class Transaction extends PersistentObject {
 	public void setPaymentId(String paymentId) {
 		this.paymentId = paymentId;
 	}
+
+	public TrackOrder getTrackOrder() {
+		return trackOrder;
+	}
+
+	public void setTrackOrder(TrackOrder trackOrder) {
+		this.trackOrder = trackOrder;
+	}
+	
+	
 
 }

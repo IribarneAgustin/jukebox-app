@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import com.juke.api.dto.TrackInfoDTO;
 import com.juke.api.model.Track;
+import com.juke.api.model.TrackOrder;
 import com.juke.api.model.Transaction;
 import com.juke.api.repository.ITransactionRepository;
 import com.juke.api.utils.SystemLogger;
@@ -26,28 +27,21 @@ public class TransactionService {
 
 	@Autowired
 	private TrackService trackService;
-
-	public void saveNewTransactionAndTrackIfNotExists(String paymentId, String trackURI, Double amount, String albumCover,
-			String artistName, String trackName) throws Exception {
+	
+	public Transaction saveNewTransaction(TrackOrder order) throws Exception {
 		try {
-			Transaction transaction = new Transaction();
-			//String spotifyId = SpotifyUtils.extractSpotifyId(trackURI);
-			Track track = trackService.findBySpotifyURI(trackURI);
+			Track track = trackService.findBySpotifyURI(order.getTrack().getSpotifyURI());
 			if (track == null) {
-				track = new Track();
-				track.setAlbumCover(albumCover);
-				track.setArtistName(artistName);
-				track.setSpotifyURI(trackURI);
-				track.setTrackName(trackName);
+				track = order.getTrack();
 				trackService.save(track);
 			}
+			Transaction transaction = new Transaction();
 			transaction.setActive(Boolean.TRUE);
-			transaction.setPaymentId(paymentId);
-			transaction.setTrack(track);
+			transaction.setTrack(order.getTrack());
 			transaction.setCreationTimestamp(new Timestamp(System.currentTimeMillis()));
-			transaction.setAmount(new BigDecimal(amount));
-			transactionRepository.save(transaction);
-			SystemLogger.info("Transaction saved succesfully");
+			transaction.setAmount(order.getAmount());
+			transaction.setTrackOrder(order);
+			return transactionRepository.save(transaction);
 		} catch (Exception e) {
 			SystemLogger.error(e.getMessage(), e);
 			throw e;

@@ -39,13 +39,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			throws ServletException, IOException {
 
 		String token = getTokenFromRequest(request);
-
-		if (token == null && request.getRequestURI() != null && !AuthUtils.isAllowedUrl(request.getRequestURI())) {
+		
+		/*if (token == null && request.getRequestURI() != null && !AuthUtils.isAllowedUrl(request.getRequestURI())) {
+			SystemLogger.info(request.getRequestURI());
 			token = getTokenFromCookies(request);
+			SystemLogger.info("token from cookies: " + token );
 			if (token == null) {
 				response.setStatus(HttpStatus.UNAUTHORIZED.value());
 			}
-		}
+		}*/
 
 		if (token != null) {
 			try {

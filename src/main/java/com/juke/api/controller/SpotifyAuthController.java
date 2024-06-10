@@ -8,9 +8,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.view.RedirectView;
-
+import org.springframework.http.HttpHeaders;
 import com.juke.api.service.SpotifyAuthService;
 import com.juke.api.utils.AuthUtils;
+
+import jakarta.servlet.http.HttpServletResponse;
 
 @RestController
 @RequestMapping("/api/spotify")
@@ -27,7 +29,8 @@ public class SpotifyAuthController {
     public ResponseEntity<String> login() throws Exception {
         String state = AuthUtils.generateRandomString(16);
         String authorizationUrl = spotifyAuthService.buildAuthorizationUrl(state);
-		return ResponseEntity.ok(authorizationUrl);
+        
+        return ResponseEntity.ok().body(authorizationUrl);
     }
 
     @GetMapping("/callback")

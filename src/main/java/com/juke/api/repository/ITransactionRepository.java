@@ -22,7 +22,7 @@ public interface ITransactionRepository extends JpaRepository<Transaction, Long>
 	public BigDecimal getTotalAmount();
 
 	@Query(value = "SELECT EXTRACT(MONTH FROM t.creation_Timestamp) AS month, COALESCE(SUM(t.amount), 0) AS total_Amount "
-	        + "FROM Transaction t "
+	        + "FROM transaction t "
 	        + "WHERE EXTRACT(YEAR FROM t.creation_Timestamp) = :year "
 	        + "GROUP BY EXTRACT(MONTH FROM t.creation_Timestamp)", nativeQuery = true)
 	List<Map<Integer, BigDecimal>> getTotalAmountOfLastYearSeparatedByMonth(@Param("year") Integer year);

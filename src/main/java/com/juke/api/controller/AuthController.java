@@ -34,14 +34,14 @@ public class AuthController {
 	public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request, HttpServletResponse response) {
 	    try {
 	        AuthResponse authResponse = authService.login(request);
-	        String jwtToken = authResponse.getToken();
+	        /*  String jwtToken = authResponse.getToken();
 
-	        String cookieHeader = String.format("jwtToken=%s; SameSite=None; HttpOnly; Secure; Max-Age=%d; Path=/", jwtToken, 180 * 24 * 60 * 60); //6 months
+	      /*  String cookieHeader = String.format("jwtToken=%s; SameSite=None; HttpOnly; Secure; Max-Age=%d; Path=/", jwtToken, 180 * 24 * 60 * 60); //6 months
 
 	        response.setHeader("Access-Control-Allow-Credentials", "true");
 	        response.setHeader("Access-Control-Allow-Origin", allowedOrigin);
 	        response.setHeader("Set-Cookie", cookieHeader);
-
+*/
 	        return ResponseEntity.ok(authResponse);
 	    } catch (Exception e) {
 			SystemLogger.error(e.getMessage(), e);
