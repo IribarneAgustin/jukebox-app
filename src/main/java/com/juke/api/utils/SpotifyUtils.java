@@ -9,10 +9,9 @@ public class SpotifyUtils {
 
 	public static String extractSpotifyId(String spotifyUri) {
 		String result = spotifyUri;
-
-		// Check if the input is already a Spotify ID (alphanumeric)
-		if (!spotifyUri.matches("[a-zA-Z0-9]+")) {
-
+		
+		if (result != null) {
+			
 			// Pattern to match Spotify playlist URIs
 			Pattern pattern = Pattern.compile("https://open\\.spotify\\.com/playlist/([a-zA-Z0-9]+).*");
 			Matcher matcher = pattern.matcher(spotifyUri);
@@ -24,7 +23,6 @@ public class SpotifyUtils {
 				throw new IllegalArgumentException("Invalid Spotify URI");
 			}
 		}
-
 		return result;
 	}
 

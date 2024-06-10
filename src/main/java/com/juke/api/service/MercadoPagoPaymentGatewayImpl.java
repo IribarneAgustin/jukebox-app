@@ -5,12 +5,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
+import java.util.UUID;
+
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 
 import org.springframework.web.client.RestTemplate;
 
 import com.juke.api.dto.PaymentDTO;
+import com.juke.api.model.TrackOrder;
 import com.juke.api.utils.SystemLogger;
 
 public class MercadoPagoPaymentGatewayImpl implements IPaymentGateway {
@@ -21,18 +27,22 @@ public class MercadoPagoPaymentGatewayImpl implements IPaymentGateway {
 	}
 
 	@Override
-	public String generatePaymentId(PaymentDTO paymentDTO) throws Exception {
+	public String generatePaymentId(PaymentDTO paymentDTO, TrackOrder order) throws Exception {
 		try {
-			Map<String, Object> preference = buildPreference(paymentDTO);
-			String paymentId = getPreferenceId(preference, paymentDTO);
-			return paymentId;
+			//ID creation
+			String externalReference = UUID.randomUUID().toString();
+			Map<String, Object> preference = buildPreference(paymentDTO, externalReference);
+			//updating order
+			order.setExternalReference(externalReference);
+			
+			return getPreferenceId(preference, paymentDTO);
 		} catch (Exception e) {
 			SystemLogger.error(e.getMessage(), e);
 			throw e;
 		}
 	}
 
-	private Map<String, Object> buildPreference(PaymentDTO paymentDTO) throws Exception {
+	private Map<String, Object> buildPreference(PaymentDTO paymentDTO, String externalReference) throws Exception {
 
 		Map<String, Object> preference = new HashMap<>();
 
@@ -42,22 +52,14 @@ public class MercadoPagoPaymentGatewayImpl implements IPaymentGateway {
 		)));
 
 		preference.put("back_urls",
-				Map.of("success", buildSuccessUrl(paymentDTO), "failure", paymentDTO.getFailedUrl(), "pending", ""));
+				Map.of("success", paymentDTO.getSuccessUrl(), "failure", paymentDTO.getFailedUrl(), "pending", ""));
 		preference.put("auto_return", "approved");
 		preference.put("marketplace_fee", calculateFee(paymentDTO.getPrice(), paymentDTO.getMarketplaceFee()));
+		preference.put("notification_url", paymentDTO.getWebHookUrl());
+		preference.put("external_reference", externalReference);
 
 		return preference;
 
-	}
-
-	private String buildSuccessUrl(PaymentDTO paymentDTO) throws Exception {
-
-		return paymentDTO.getSuccessUrl() + "?"
-				+ new StringJoiner("&").add("trackURI=" + paymentDTO.getTrackInfoDTO().getTrackUri())
-						.add("amount=" + paymentDTO.getPrice().toString())
-						.add("albumCover=" + paymentDTO.getTrackInfoDTO().getAlbumCover())
-						.add("artistName=" + sanitizeForUrl(paymentDTO.getTrackInfoDTO().getArtistName()))
-						.add("trackName=" + sanitizeForUrl(paymentDTO.getTrackInfoDTO().getTrackName())).toString();
 	}
 
 	private String sanitizeForUrl(String input) {
@@ -82,6 +84,28 @@ public class MercadoPagoPaymentGatewayImpl implements IPaymentGateway {
 		BigDecimal price = new BigDecimal(amount);
 		BigDecimal fee = new BigDecimal(marketplaceFee);
 		return price.multiply(fee);
+	}
+	
+	@Override
+	public HttpStatusCode refundCash(String paymentId, String token, TrackOrder order) throws Exception {
+	    
+	    RestTemplate restTemplate = new RestTemplate();
+	    Map<String, Object> refundData = new HashMap<>();
+	    refundData.put("amount", order.getAmount());
+	    refundData.put("reason", "Error inesperado al encolar canción " + order.getTrack().getDescription());
+
+	    HttpHeaders headers = new HttpHeaders();
+	    headers.add("X-Idempotency-Key", UUID.randomUUID().toString()); // Generate a unique idempotency key
+
+	    HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(refundData, headers);
+
+	    ResponseEntity<Map> response = restTemplate.postForEntity(
+	        "https://api.mercadopago.com/v1/payments/" + paymentId + "/refunds?access_token=" + token,
+	        requestEntity,
+	        Map.class
+	    );
+
+	    return response.getStatusCode();
 	}
 
 }

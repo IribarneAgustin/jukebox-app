@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -24,14 +25,18 @@ public class AdminConfigurationService {
 	@Autowired
 	private IAdminConfigurationRepository adminConfigRepo;
 	
+	@Value("${MIN_PRICE}")
+	private Double minPrice;
+	
+	
 	
 	
 	public ResponseEntity<String> setTrackPrice(BigDecimal price) {
 		ResponseEntity<String> response = null;
 		try {
 
-			if (price == null) {
-				throw new IllegalArgumentException("Price must not be null");
+			if (price == null || price.compareTo(BigDecimal.valueOf(minPrice)) < 0) {
+				throw new IllegalArgumentException("Invalid Price");
 			}
 
 			TrackPriceConfiguration trackPriceConfig = adminConfigRepo.findTrackPriceConfigurationByActiveTrue();
@@ -88,12 +93,6 @@ public class AdminConfigurationService {
 	public ResponseEntity<String> setPlaylistId(String playlistId) {
 		ResponseEntity<String> response = null;
 		try {
-
-			if (playlistId == null) {
-				throw new Exception("Playlist ID must not be null");
-			}
-
-			// exctract it from url
 			playlistId = SpotifyUtils.extractSpotifyId(playlistId);
 
 			AppConfiguration appConfig = adminConfigRepo.findAppConfigurationByActiveTrue();

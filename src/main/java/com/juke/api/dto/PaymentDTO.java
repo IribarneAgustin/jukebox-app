@@ -11,13 +11,14 @@ public class PaymentDTO {
 	private String failedUrl;
 	private TrackInfoDTO trackInfoDTO;
 	private Double marketplaceFee;
+	private String webHookUrl;
 	
 	public PaymentDTO() {
 
 	}
 
 	public PaymentDTO(String description, Double price, Integer quantity, String currency, String token,
-			String successUrl, String failedUrl, TrackInfoDTO trackInfoDTO, Double marketplaceFee) {
+			String successUrl, String failedUrl, TrackInfoDTO trackInfoDTO, Double marketplaceFee, String webHookUrl) {
 		this.description = description;
 		this.price = price;
 		this.quantity = quantity;
@@ -27,6 +28,7 @@ public class PaymentDTO {
 		this.failedUrl = failedUrl;
 		this.trackInfoDTO = trackInfoDTO;
 		this.marketplaceFee = marketplaceFee;
+		this.webHookUrl = webHookUrl;
 	}
 
 	public TrackInfoDTO getTrackInfoDTO() {
@@ -101,4 +103,14 @@ public class PaymentDTO {
 		this.marketplaceFee = marketplaceFee;
 	}
 
+	public String getWebHookUrl() {
+		return webHookUrl;
+	}
+
+	public void setWebHookUrl(String webHookUrl) {
+		this.webHookUrl = webHookUrl;
+	}
+
+	
+	
 }

@@ -1,6 +1,7 @@
 package com.juke.api.service;
 
 import com.juke.api.dto.PaymentDTO;
+import com.juke.api.model.TrackOrder;
 import com.juke.api.utils.SystemLogger;
 
 public class PaymentContext {
@@ -26,14 +27,14 @@ public class PaymentContext {
 		SystemLogger.info("Payment process completed.");
 	}
 	
-	public String generatePaymentId(PaymentDTO paymentDTO) throws Exception{
+	public String generatePaymentId(PaymentDTO paymentDTO, TrackOrder order) throws Exception{
 		String redirectUrl = null;
 		if (paymentGateway == null) {
 			throw new IllegalStateException("Payment gateway not set.");
 		}
 		SystemLogger.info("Generating payment id");
 		try {
-			redirectUrl = paymentGateway.generatePaymentId(paymentDTO);
+			redirectUrl = paymentGateway.generatePaymentId(paymentDTO, order);
 		} catch (Exception e) {
 			SystemLogger.error(e.getMessage(), e);
 			throw e;
