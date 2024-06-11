@@ -77,7 +77,7 @@ public class OrderService {
 			} else {
 				attempts++;
 				try {
-					Thread.sleep(1500); // 1 second delay between attempts
+					Thread.sleep(3000); // 3 seconds delay between attempts
 				} catch (InterruptedException ex) {
 					Thread.currentThread().interrupt();
 				}

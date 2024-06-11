@@ -10,6 +10,7 @@ import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -47,9 +48,10 @@ public class TrackService {
 	}
 
 	/*
-	 * Run monthly on the first day at 2:00 AM
+	 * Run monthly on the first day at 7:30 AM
 	 */
-	@Scheduled(cron = "0 0 2 1 * ?")
+	@Async
+	@Scheduled(cron = "0 30 7 1 * ?")
 	public void updateTracksTaskScheduled() {
 		try {
 			SystemLogger.info("********** INFO-BEGIN updateTracksTaskScheduled");
