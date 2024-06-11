@@ -100,7 +100,7 @@ public class MercadoPagoPaymentGatewayImpl implements IPaymentGateway {
 	    HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(refundData, headers);
 
 	    ResponseEntity<Map> response = restTemplate.postForEntity(
-	        "https://api.mercadopago.com/v1/payments/" + paymentId + "/refunds?access_token=" + token,
+	        "https://api.mercadopago.com/v1/advanced_payments/" + paymentId + "/refunds?access_token=" + token,
 	        requestEntity,
 	        Map.class
 	    );

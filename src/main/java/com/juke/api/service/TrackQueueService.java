@@ -88,7 +88,7 @@ public class TrackQueueService {
 
 	public void enqueueTrack(String trackURI) throws Exception {
 		try {
-			//throw new Exception();
+			
 			AppConfiguration adminConfig = adminConfiguration.findAppConfigurationByActiveTrue();
 
 			if (adminConfig != null && adminConfig.getSpotifyPlaylistId() != null) {
