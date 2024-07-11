@@ -131,11 +131,12 @@ public class SpotifyPlaybackSDK {
 						.header("Authorization", "Bearer " + token).POST(HttpRequest.BodyPublishers.noBody()).build();
 
 				HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-				if (response.statusCode() == 204) {
+				int statusCode = response.statusCode();
+				if (statusCode >= 200 && statusCode < 300) {
 					successConnection = Boolean.TRUE;
-					SystemLogger.info("Track enqueued!");
+					SystemLogger.info("Track enqueued with status code: " + statusCode);
 				} else {
-					throw new Exception("Ocurrió un error al encolar la canción en spotify");
+					throw new Exception("Ocurrió un error al encolar la canción en Spotify, status code: " + statusCode);
 				}
 
 			} catch (Exception e) {
@@ -191,6 +192,10 @@ public class SpotifyPlaybackSDK {
 				Thread.sleep(2000);
 				attempts++;
 			}
+		}
+
+		if(!successConnection){
+			result = Boolean.FALSE;
 		}
 
 		return result;
