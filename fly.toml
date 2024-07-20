@@ -1,9 +1,9 @@
-# fly.toml app configuration file generated for jboxapp on 2024-02-25T17:13:03-03:00
+# fly.toml app configuration file generated for pb-jboxapp on 2024-06-11T18:39:33-03:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'jboxapp'
+app = 'pb-jboxapp'
 primary_region = 'eze'
 
 [build]
@@ -18,3 +18,6 @@ primary_region = 'eze'
 
 [[vm]]
   size = 'shared-cpu-2x'
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 2
